@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mystery Jewelry Jar</title>
+<link id="gfont" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{scroll-behavior:smooth}
+body{font-family:var(--font-body,'Jost'),sans-serif;background:var(--bg,#FAF6EE);color:var(--text,#1A1220)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--pd,#D4AF37);border-radius:4px}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(110%)}to{transform:translateX(0)}}
+@keyframes slideLeft{from{transform:translateX(-110%)}to{transform:translateX(0)}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.fu{animation:fadeUp .45s ease both}
+.fi{animation:fadeIn .3s ease both}
+.si{animation:slideIn .35s cubic-bezier(.34,1.1,.64,1) both}
+.sl{animation:slideLeft .35s cubic-bezier(.34,1.1,.64,1) both}
+.mi{animation:fadeUp .3s cubic-bezier(.34,1.1,.64,1) both}
+.fl{animation:floatY 3.5s ease-in-out infinite}
+
+/* Buttons */
+.btn{transition:all .18s ease;cursor:pointer;outline:none;border:none;font-family:var(--font-body,'Jost'),sans-serif}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+input,textarea,select{outline:none;font-family:var(--font-body,'Jost'),sans-serif}
+input:focus,textarea:focus,select:focus{border-color:var(--pd,#D4AF37)!important;box-shadow:0 0 0 3px rgba(212,175,55,.14)!important}
+
+/* Catalog grid */
+.catalog-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.product-card{transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s}
+.product-card:hover{transform:translateY(-5px)}
+
+/* Carousel */
+.carousel-track{display:flex;gap:12px;animation:scroll 30s linear infinite;width:max-content}
+.carousel-track:hover{animation-play-state:paused}
+.carousel-wrap{overflow:hidden;position:relative}
+.carousel-wrap::before,.carousel-wrap::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.carousel-wrap::before{left:0;background:linear-gradient(to right,var(--bg,#FAF6EE),transparent)}
+.carousel-wrap::after{right:0;background:linear-gradient(to left,var(--bg,#FAF6EE),transparent)}
+
+/* Stars */
+.star{color:#D4AF37;font-size:14px}
+.star-empty{color:#ddd;font-size:14px}
+
+/* Responsive */
+@media(min-width:900px){
+  .catalog-grid{grid-template-columns:repeat(3,1fr);gap:22px}
+  .page-wrap{padding:40px 48px 80px!important}
+}
+@media(min-width:1200px){.catalog-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:599px){
+  .catalog-grid{grid-template-columns:1fr 1fr!important;gap:10px}
+  .hide-sm{display:none!important}
+  .footer-grid{grid-template-columns:1fr 1fr!important;gap:16px!important}
+}
+
+/* Admin */
+.admin-tab-btn{padding:9px 16px;background:none;border:none;border-bottom:2.5px solid transparent;font-family:var(--font-body,'Jost'),sans-serif;cursor:pointer;font-size:13px;white-space:nowrap;transition:all .15s}
+.admin-tab-btn.active{border-bottom-color:var(--pd,#D4AF37);color:var(--text,#1A1220);font-weight:600}
+.toggle-switch{width:40px;height:22px;background:var(--pd,#D4AF37);border-radius:50px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.toggle-switch.off{background:#ddd}
+.toggle-switch::after{content:"";width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s}
+.toggle-switch.on::after{left:21px}
+</style>
+</head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+
+/* ──── CONSTANTS ──── */
+const WM_STATES=["Johor","Kedah","Kelantan","Melaka","Negeri Sembilan","Pahang","Penang","Perak","Perlis","Selangor","Terengganu","Kuala Lumpur","Putrajaya"];
+const EM_STATES=["Sabah","Sarawak","Labuan"];
+const ALL_STATES=[...WM_STATES,...EM_STATES].sort();
+const FONTS={
+  "Cormorant Garamond":"'Cormorant Garamond',serif",
+  "Playfair Display":"'Playfair Display',serif",
+  "EB Garamond":"'EB Garamond',serif",
+  "Jost":"'Jost',sans-serif",
+  "DM Sans":"'DM Sans',sans-serif",
+  "Inter":"'Inter',sans-serif"
+};
+const CURRENCIES={MY:"RM",SG:"SGD ",US:"USD ",AU:"AUD ",GB:"£",EU:"€"};
+
+/* ──── DEFAULT CONFIG ──── */
+const DCFG={
+  shopName:"Mystery Jewelry Jar",
+  tagline:"Handcrafted treasures, wrapped in mystery ✦",
+  whatsapp:"60123456789",adminPass:"admin123",
+  jbKey:"$2a$10$W/j7J0jh5tadjL3MGaYfr.LYB.xGtex.6v.Sjl/SbxjNrbLY5irO.",
+  jbId:"6a1176d26610dd3ae890f422",
+  colorPrimary:"#D4AF37",colorBg:"#FAF6EE",colorCard:"#FFFFFF",
+  colorFooter:"#1A1220",colorText:"#1A1220",colorAccent:"#1A1220",
+  fontHeading:"Cormorant Garamond",fontBody:"Jost",
+  heroImage:"",heroBgColor:"#1A1220",heroOverlay:55,
+  heroTitle:"Discover Your Mystery Jar",heroSubtitle:"Every jar is a unique handcrafted surprise ✦",
+  ctaText:"Browse Collection",ctaVisible:true,
+  descVisible:true,
+  descText:"Each Mystery Jewelry Jar is a handcrafted treasure box, carefully curated with love. Unwrap the mystery and discover beautiful jewelry pieces chosen just for you.",
+  reviewsVisible:true,reviews:[],
+  carouselVisible:true,carouselPhotos:[],carouselTitle:"Behind the Scenes ✦",
+  featuredVisible:true,featuredItems:[],featuredTitle:"Our Favourites ✦",
+  faqVisible:true,faqs:[],faqTitle:"Frequently Asked Questions",
+  shippingWM:10,shippingEM:15,
+  discPct:10,promoCode:"",promoPct:0,
+  aboutText:"We are Mystery Jewelry Jar — a small handcrafted jewelry brand built on love and creativity. Each jar is carefully packed with unique pieces chosen just for you.",
+  contactEmail:"hello@mysteryjewelryjar.com",contactIG:"@mysteryjewelryjar",contactIGUrl:"https://instagram.com/mysteryjewelryjar",contactTT:"@mysteryjewelryjar",contactTTUrl:"https://tiktok.com/@mysteryjewelryjar",
+  popupVisible:true,popupTitle:"Welcome! ✦",popupText:"Sign up and get 10% off your first order!",
+  newsletterTitle:"Stay in the loop ✦",newsletterText:"Be the first to know about new jars and special drops.",
+  currencyAuto:true,
+  loadingBg:"#1A1220",loadingText:"unwrapping your magic…",loadingImage:"",
+  footerAboutText:"Handcrafted jewelry jars, made with love.",
+  socialTwitter:"",socialFB:"",
+};
+
+/* ──── THEME ──── */
+let T={};
+function buildT(cfg){
+  const p=cfg.colorPrimary||"#D4AF37",bg=cfg.colorBg||"#FAF6EE",
+        card=cfg.colorCard||"#FFFFFF",footer=cfg.colorFooter||"#1A1220",
+        text=cfg.colorText||"#1A1220",acc=cfg.colorAccent||"#1A1220";
+  T={p,bg,card,footer,text,acc,
+     pl:p+"22",pm:p+"88",
+     b:"rgba(0,0,0,.09)",
+     sh:"0 2px 16px rgba(0,0,0,.06)",sh2:"0 8px 32px rgba(0,0,0,.12)",
+     tm:text+"BB",tl:text+"66"};
+  if(typeof document!=="undefined"){
+    const r=document.documentElement;
+    r.style.setProperty("--pd",p);r.style.setProperty("--bg",bg);
+    r.style.setProperty("--text",text);
+    r.style.setProperty("--font-heading",FONTS[cfg.fontHeading]||FONTS["Cormorant Garamond"]);
+    r.style.setProperty("--font-body",FONTS[cfg.fontBody]||FONTS["Jost"]);
+    document.body.style.background=bg;document.body.style.color=text;
+  }
+}
+buildT(DCFG);
+
+/* ──── STORAGE ──── */
+const LS={
+  g:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch{return null}},
+  s:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+const JB={
+  async pull(k,id){if(!k||!id)return null;try{const r=await fetch("https://api.jsonbin.io/v3/b/"+id+"/latest",{headers:{"X-Master-Key":k}});if(!r.ok)return null;const d=await r.json();return d.record||null;}catch{return null;}},
+  async push(k,id,data){if(!k||!id)return false;try{const r=await fetch("https://api.jsonbin.io/v3/b/"+id,{method:"PUT",headers:{"X-Master-Key":k,"Content-Type":"application/json"},body:JSON.stringify(data)});return r.ok;}catch{return false;}}
+};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ──── HELPERS ──── */
+const fmtPrice=(n,cur="RM")=>cur+(typeof n==="number"?n.toFixed(2):"0.00");
+function Stars({rating=0,size=14}){
+  return <span>{[1,2,3,4,5].map(i=><span key={i} className={i<=Math.round(rating)?"star":"star-empty"} style={{fontSize:size}}>★</span>)}</span>;
+}
+function Toggle({on,onChange}){
+  return <div className={"toggle-switch "+(on?"on":"off")} onClick={onChange}/>;
+}
+function Lbl({c,sm}){return <label style={{fontSize:sm?10:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".09em",color:T.tm,display:"block",marginBottom:4}}>{c}</label>;}
+function iSt(x={}){return{width:"100%",padding:"10px 14px",borderRadius:9,border:"1.5px solid "+T.b,fontSize:13,background:T.card,color:T.text,fontFamily:"var(--font-body,'Jost'),sans-serif",...x};}
+function Toast({m}){return <div className="mi" style={{position:"fixed",bottom:22,left:12,right:12,background:T.footer,color:"#fff",padding:"12px 18px",borderRadius:12,zIndex:9999,fontSize:13,textAlign:"center",boxShadow:"0 6px 24px rgba(0,0,0,.25)",pointerEvents:"none"}}>{m}</div>;}
+
+/* ──── APP ──── */
+function App(){
+  const[pg,setPg]=useState("home");const[cur,setCur]=useState(null);
+  const[cart,setCart]=useState([]);const[cfg,setCfgS]=useState(DCFG);
+  const[items,setItemsS]=useState([]);const[subs,setSubsS]=useState([]);
+  const[orders,setOrdersS]=useState([]);
+  const[notif,setNotif]=useState(null);const[loading,setLoading]=useState(true);
+  const[menuOpen,setMenuOpen]=useState(false);const[cartOpen,setCartOpen]=useState(false);
+  const[popupDone,setPopupDone]=useState(false);const[showPopup,setShowPopup]=useState(false);
+  const[adminOk,setAdminOk]=useState(false);const[currency,setCurrency]=useState("RM");
+  const[searchQ,setSearchQ]=useState("");const[searchOpen,setSearchOpen]=useState(false);
+  const[loginOpen,setLoginOpen]=useState(false);const[signupOpen,setSignupOpen]=useState(false);
+  const logoTaps=useRef(0);const logoTimer=useRef(null);
+
+  useEffect(()=>{(async()=>{
+    const cloud=await JB.pull(DCFG.jbKey,DCFG.jbId);
+    if(cloud){
+      const merged={...DCFG,...(cloud.cfg||{})};
+      buildT(merged);setCfgS(merged);LS.s("jj:cfg",merged);
+      setItemsS(cloud.items||[]);LS.s("jj:items",cloud.items||[]);
+      setSubsS(cloud.subs||[]);LS.s("jj:subs",cloud.subs||[]);
+      setOrdersS(cloud.orders||[]);LS.s("jj:orders",cloud.orders||[]);
+    } else {
+      const lc=LS.g("jj:cfg")||DCFG;buildT(lc);setCfgS(lc);
+      setItemsS(LS.g("jj:items")||[]);
+      setSubsS(LS.g("jj:subs")||[]);
+      setOrdersS(LS.g("jj:orders")||[]);
+    }
+    setLoading(false);
+    if(cfg.currencyAuto){
+      try{const r=await fetch("https://ipapi.co/json/");const d=await r.json();
+        const map={MY:"RM",SG:"SGD ",US:"USD ",AU:"AUD ",GB:"£"};
+        setCurrency(map[d.country_code]||"RM");
+      }catch{}
+    }
+  })();},[]);
+
+  useEffect(()=>{
+    if(!loading&&!popupDone&&cfg.popupVisible){
+      const t=setTimeout(()=>{setShowPopup(true);},3500);return()=>clearTimeout(t);
+    }
+  },[loading,cfg.popupVisible,popupDone]);
+
+  const syncCloud=async(ni,ns,no,nc)=>{
+    const c=nc||cfg;if(!c.jbKey||!c.jbId)return;
+    await JB.push(c.jbKey,c.jbId,{items:ni||items,subs:ns||subs,orders:no||orders,cfg:c});
+  };
+  const saveItems=async v=>{setItemsS(v);LS.s("jj:items",v);await syncCloud(v,null,null,null);};
+  const saveSubs=async v=>{setSubsS(v);LS.s("jj:subs",v);await syncCloud(null,v,null,null);};
+  const saveOrders=async v=>{setOrdersS(v);LS.s("jj:orders",v);await syncCloud(null,null,v,null);};
+  const saveCfg=async v=>{buildT(v);setCfgS(v);LS.s("jj:cfg",v);await syncCloud(null,null,null,v);};
+  const toast=m=>{setNotif(m);setTimeout(()=>setNotif(null),3000)};
+
+  buildT(cfg);
+
+  const cnt=cart.reduce((s,c)=>s+c.qty,0);
+  const nav=(page,item=null)=>{setPg(page);setCur(item);setMenuOpen(false);setSearchOpen(false);window.scrollTo(0,0);};
+  const addCart=(item,choices,qty=1)=>{
+    const cid=uid();
+    setCart(p=>[...p,{...item,qty,choices,cartId:cid}]);
+    toast(item.name+" added to cart ✦");
+  };
+  const remCart=cid=>setCart(p=>p.filter(c=>c.cartId!==cid));
+  const updCartQty=(cid,q)=>{if(q<1)return remCart(cid);setCart(p=>p.map(c=>c.cartId===cid?{...c,qty:q}:c));};
+  const handleLogoTap=()=>{logoTaps.current++;clearTimeout(logoTimer.current);if(logoTaps.current>=5){logoTaps.current=0;nav("admin");toast("🔐 Admin mode")}else{logoTimer.current=setTimeout(()=>logoTaps.current=0,2000)}};
+  useEffect(()=>{if(window.location.search.includes("admin")||window.location.hash.includes("admin"))nav("admin");},[]);
+
+  /* Loading */
+  if(loading){
+    const lc=LS.g("jj:cfg")||DCFG;
+    const lStyle=lc.loadingImage?{backgroundImage:"url("+lc.loadingImage+")",backgroundSize:"cover",backgroundPosition:"center"}:{background:lc.loadingBg||"#1A1220"};
+    return(
+      <div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",...lStyle,gap:16,position:"relative"}}>
+        {lc.loadingImage&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)"}}/>}
+        <div style={{position:"relative",zIndex:1,textAlign:"center"}}>
+          <div className="fl" style={{fontSize:48,marginBottom:14,color:lc.colorPrimary||"#D4AF37"}}>✦</div>
+          <p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:38,color:"#FAF6EE",fontWeight:400,letterSpacing:".02em"}}>{lc.shopName||"Mystery Jewelry Jar"}</p>
+          <p style={{color:"rgba(250,246,238,.5)",fontSize:11,marginTop:10,letterSpacing:".22em",textTransform:"uppercase"}}>{lc.loadingText||"unwrapping your magic…"}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+
+  return(
+    <div style={{minHeight:"100vh",background:T.bg,color:T.text,display:"flex",flexDirection:"column"}}>
+      {notif&&<Toast m={notif}/>}
+
+      {/* ══ NAV ══ */}
+      <nav style={{position:"sticky",top:0,zIndex:200,background:T.bg+"F6",backdropFilter:"blur(16px)",borderBottom:"1px solid "+T.b,padding:"0 18px",flexShrink:0}}>
+        <div style={{maxWidth:1160,margin:"0 auto",height:60,display:"flex",alignItems:"center",justifyContent:"space-between",position:"relative"}}>
+          <button onClick={()=>setMenuOpen(true)} className="btn" style={{background:"none",padding:"5px 4px",display:"flex",flexDirection:"column",gap:4.5,zIndex:1}}>
+            <div style={{width:21,height:2,background:T.text,borderRadius:2}}/>
+            <div style={{width:15,height:2,background:T.text,borderRadius:2}}/>
+            <div style={{width:21,height:2,background:T.text,borderRadius:2}}/>
+          </button>
+          <button onClick={()=>{handleLogoTap();nav("home");}} className="btn" style={{position:"absolute",left:"50%",transform:"translateX(-50%)",background:"none",padding:0}}>
+            <span style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:20,fontWeight:500,color:T.text,letterSpacing:".04em",whiteSpace:"nowrap"}}>{cfg.shopName}</span>
+          </button>
+          <div style={{display:"flex",alignItems:"center",gap:6,zIndex:1}}>
+            <button onClick={()=>setSearchOpen(s=>!s)} className="btn" style={{background:"none",fontSize:17,color:T.text,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>🔍</button>
+            <button onClick={()=>nav("cart")} className="btn" style={{background:"none",fontSize:17,color:T.text,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+              🛒
+              {cnt>0&&<span style={{position:"absolute",top:-4,right:-4,background:T.p,color:"#fff",borderRadius:"50%",width:16,height:16,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{cnt}</span>}
+            </button>
+            <button onClick={()=>setLoginOpen(true)} className="btn hide-sm" style={{background:"none",border:"1.5px solid "+T.b,borderRadius:50,padding:"5px 13px",fontSize:12,color:T.text}}>Login</button>
+            <button onClick={()=>setSignupOpen(true)} className="btn hide-sm" style={{background:T.p,borderRadius:50,padding:"5px 13px",fontSize:12,color:"#fff",fontWeight:600}}>Sign Up</button>
+          </div>
+        </div>
+        {searchOpen&&(
+          <div className="fu" style={{padding:"8px 18px 12px",borderTop:"1px solid "+T.b}}>
+            <input autoFocus value={searchQ} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){nav("catalog");setSearchOpen(false);}}} placeholder="Search jewelry jars…" style={{...iSt(),borderRadius:50,padding:"9px 18px"}}/>
+          </div>
+        )}
+      </nav>
+
+      {/* ══ MENU DRAWER ══ */}
+      {menuOpen&&(
+        <>
+          <div className="fi" onClick={()=>setMenuOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",zIndex:300}}/>
+          <div className="sl" style={{position:"fixed",left:0,top:0,bottom:0,width:"min(300px,80vw)",background:T.card,zIndex:301,display:"flex",flexDirection:"column",boxShadow:"6px 0 32px rgba(0,0,0,.15)"}}>
+            <div style={{padding:"18px 20px",borderBottom:"1px solid "+T.b,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:18,color:T.text}}>{cfg.shopName}</span>
+              <button onClick={()=>setMenuOpen(false)} className="btn" style={{background:"none",fontSize:20,color:T.tm}}>×</button>
+            </div>
+            <div style={{flex:1,overflowY:"auto",padding:"6px 0"}}>
+              {[["home","🏠 Home"],["catalog","✦ Collection"],["about","About Us"],["contact","Contact"],["privacy","Privacy Policy"]].map(([p,l])=>(
+                <button key={p} onClick={()=>nav(p)} className="btn" style={{display:"block",width:"100%",padding:"16px 22px",background:"none",fontSize:15,color:T.text,textAlign:"left",borderBottom:"1px solid "+T.b+"44",fontFamily:"var(--font-body,'Jost'),sans-serif"}}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <div style={{padding:"16px 20px",borderTop:"1px solid "+T.b,display:"flex",flexDirection:"column",gap:8}}>
+              <button onClick={()=>nav("catalog")} className="btn" style={{width:"100%",padding:"12px",background:T.p,color:"#fff",borderRadius:11,fontSize:14,fontWeight:600}}>Shop Now ✦</button>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>{setMenuOpen(false);setSignupOpen(true);}} className="btn" style={{flex:1,padding:"10px",background:T.p+"18",border:"1.5px solid "+T.p,borderRadius:11,color:T.p,fontSize:13,fontWeight:600}}>Sign Up</button>
+                <button onClick={()=>{setMenuOpen(false);setLoginOpen(true);}} className="btn" style={{flex:1,padding:"10px",background:"none",border:"1.5px solid "+T.b,borderRadius:11,color:T.text,fontSize:13}}>Login</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══ PAGES ══ */}
+      <div style={{flex:1}}>
+        {pg==="home"&&<HomePage cfg={cfg} items={items} onNav={nav} currency={currency}/>}
+        {pg==="catalog"&&<CatalogPage cfg={cfg} items={items} onItem={it=>nav("item",it)} searchQ={searchQ} setSearchQ={setSearchQ} currency={currency}/>}
+        {pg==="item"&&cur&&<ItemPage item={cur} items={items} cfg={cfg} onBack={()=>nav("catalog")} onAdd={addCart} onItem={it=>nav("item",it)} currency={currency}/>}
+        {pg==="cart"&&<CartPage cart={cart} cfg={cfg} onQty={updCartQty} onRem={remCart} onBack={()=>nav("catalog")} saveOrders={saveOrders} orders={orders} currency={currency} subs={subs} saveSubs={saveSubs}/>}
+        {pg==="about"&&<AboutPage cfg={cfg} onNav={nav}/>}
+        {pg==="contact"&&<ContactPage cfg={cfg} onNav={nav}/>}
+        {pg==="privacy"&&<PrivacyPage cfg={cfg} onNav={nav}/>}
+        {pg==="admin"&&<AdminPage ok={adminOk} onAuth={p=>{if(p===cfg.adminPass){setAdminOk(true);return true;}return false;}} cfg={cfg} saveCfg={saveCfg} items={items} saveItems={saveItems} subs={subs} saveSubs={saveSubs} orders={orders} onBack={()=>nav("home")} toast={toast}/>}
+      </div>
+
+      {/* ══ FOOTER ══ */}
+      {pg!=="admin"&&(
+        <footer style={{background:T.footer,color:"rgba(255,255,255,.5)",padding:"48px 20px 24px"}}>
+          <div className="footer-grid" style={{maxWidth:1160,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:28,marginBottom:28}}>
+            <div>
+              <p style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:20,color:"#FAF6EE",marginBottom:8,fontWeight:400}}>{cfg.shopName}</p>
+              <p style={{fontSize:13,lineHeight:1.8}}>{cfg.footerAboutText}</p>
+            </div>
+            <div>
+              <p style={{color:"rgba(255,255,255,.8)",fontWeight:600,fontSize:11,textTransform:"uppercase",letterSpacing:".1em",marginBottom:12}}>Explore</p>
+              {[["home","Home"],["catalog","Collection"],["about","About Us"],["contact","Contact"],["privacy","Privacy Policy"]].map(([p,l])=>(
+                <button key={p} onClick={()=>nav(p)} className="btn" style={{display:"block",background:"none",color:"rgba(255,255,255,.4)",fontSize:13,padding:"3px 0",textAlign:"left",width:"100%"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,.4)"}>{l}</button>
+              ))}
+            </div>
+            <div>
+              <p style={{color:"rgba(255,255,255,.8)",fontWeight:600,fontSize:11,textTransform:"uppercase",letterSpacing:".1em",marginBottom:12}}>Follow Us</p>
+              {cfg.contactIG&&<a href={cfg.contactIGUrl||"#"} target="_blank" style={{display:"flex",alignItems:"center",gap:8,color:"rgba(255,255,255,.4)",fontSize:13,textDecoration:"none",marginBottom:7}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,.4)"}><span>📸</span><span>{cfg.contactIG}</span></a>}
+              {cfg.contactTT&&<a href={cfg.contactTTUrl||"#"} target="_blank" style={{display:"flex",alignItems:"center",gap:8,color:"rgba(255,255,255,.4)",fontSize:13,textDecoration:"none"}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,.4)"}><span>🎵</span><span>{cfg.contactTT}</span></a>}
+            </div>
+            <div>
+              <p style={{color:"rgba(255,255,255,.8)",fontWeight:600,fontSize:11,textTransform:"uppercase",letterSpacing:".1em",marginBottom:12}}>Contact</p>
+              <a href={"https://wa.me/"+(cfg.contactWa||cfg.whatsapp)} target="_blank" style={{display:"block",color:"rgba(255,255,255,.4)",fontSize:13,textDecoration:"none",marginBottom:6}} onMouseEnter={e=>e.currentTarget.style.color="#fff"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,.4)"}>💬 WhatsApp</a>
+              {cfg.contactEmail&&<span style={{display:"block",fontSize:13}}>✉️ {cfg.contactEmail}</span>}
+            </div>
+          </div>
+          {/* Newsletter */}
+          <NewsletterBar cfg={cfg} subs={subs} saveSubs={saveSubs} toast={toast}/>
+          <div style={{borderTop:"1px solid rgba(255,255,255,.07)",paddingTop:16,maxWidth:1160,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+            <p style={{fontSize:12}}>© {new Date().getFullYear()} {cfg.shopName}. All rights reserved.</p>
+            <button onClick={()=>nav("admin")} className="btn" style={{background:"none",color:"rgba(255,255,255,.06)",fontSize:11,padding:0}} onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,.2)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,.06)"}>manage</button>
+          </div>
+        </footer>
+      )}
+
+      {/* ══ POPUP ══ */}
+      {showPopup&&cfg.popupVisible&&(
+        <>
+          <div className="fi" onClick={()=>{setShowPopup(false);setPopupDone(true);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:500}}/>
+          <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:501,pointerEvents:"none"}}>
+            <div className="mi" style={{background:T.card,borderRadius:24,padding:"36px 28px",width:"min(400px,90vw)",maxWidth:400,textAlign:"center",boxShadow:"0 24px 60px rgba(0,0,0,.22)",position:"relative",pointerEvents:"auto"}}>
+              <button onClick={()=>{setShowPopup(false);setPopupDone(true);}} className="btn" style={{position:"absolute",top:14,right:14,background:"rgba(0,0,0,.07)",borderRadius:"50%",width:28,height:28,fontSize:16,color:T.tm,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+              <div className="fl" style={{fontSize:36,marginBottom:12,color:T.p}}>✦</div>
+              <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:26,color:T.text,marginBottom:8,fontWeight:400}}>{cfg.popupTitle}</h2>
+              <p style={{fontSize:14,color:T.tm,marginBottom:20,lineHeight:1.7}}>{cfg.popupText}</p>
+              <SignupForm cfg={cfg} subs={subs} saveSubs={saveSubs} toast={toast} onDone={()=>{setShowPopup(false);setPopupDone(true);}} onLogin={()=>{setShowPopup(false);setPopupDone(true);setLoginOpen(true);}}/>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══ SIGNUP MODAL ══ */}
+      {signupOpen&&(
+        <>
+          <div className="fi" onClick={()=>setSignupOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:500}}/>
+          <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:501,pointerEvents:"none"}}>
+            <div className="mi" style={{background:T.card,borderRadius:22,padding:"36px 28px",width:"min(420px,92vw)",boxShadow:"0 22px 56px rgba(0,0,0,.18)",textAlign:"center",position:"relative",pointerEvents:"auto"}}>
+              <button onClick={()=>setSignupOpen(false)} className="btn" style={{position:"absolute",top:14,right:14,background:"rgba(0,0,0,.07)",borderRadius:"50%",width:28,height:28,fontSize:16,color:T.tm,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+              <div style={{fontSize:28,color:T.p,marginBottom:10}}>✦</div>
+              <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:26,color:T.text,fontWeight:400,marginBottom:6}}>Join {cfg.shopName}</h2>
+              <p style={{fontSize:13,color:T.p,marginBottom:22}}>🎁 Get {cfg.discPct}% off your first order!</p>
+              <SignupForm cfg={cfg} subs={subs} saveSubs={saveSubs} toast={toast} onDone={()=>setSignupOpen(false)} onLogin={()=>{setSignupOpen(false);setLoginOpen(true);}}/>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══ LOGIN MODAL ══ */}
+      {loginOpen&&(
+        <>
+          <div className="fi" onClick={()=>setLoginOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:500}}/>
+          <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:501,pointerEvents:"none"}}>
+          <div className="mi" style={{background:T.card,borderRadius:22,padding:"32px 26px",width:"min(400px,90vw)",boxShadow:"0 22px 56px rgba(0,0,0,.18)",position:"relative",pointerEvents:"auto"}}>
+            <button onClick={()=>setLoginOpen(false)} className="btn" style={{position:"absolute",top:14,right:14,background:"none",fontSize:20,color:T.tm}}>×</button>
+            <div style={{textAlign:"center",marginBottom:20}}>
+              <div style={{fontSize:28,color:T.p,marginBottom:8}}>✦</div>
+              <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:24,color:T.text,fontWeight:400}}>Welcome Back</h2>
+              <p style={{fontSize:13,color:T.tl,marginTop:6}}>Enter your email to check your discount status</p>
+            </div>
+            <LoginForm subs={subs} toast={toast} cfg={cfg} onClose={()=>setLoginOpen(false)}/>
+          </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* Newsletter bar in footer */
+
+function LoginForm({subs,toast,cfg,onClose}){
+  const[email,setEmail]=useState("");
+  const check=()=>{
+    if(!email||!/\S+@\S+\.\S+/.test(email)){toast("Enter a valid email.");return;}
+    const sub=subs.find(s=>s.email===email.toLowerCase());
+    if(sub){
+      if(sub.disc&&!sub.discUsed)toast("✅ Active discount found! Use your email as promo code at checkout.");
+      else if(sub.discUsed)toast("Your discount has already been used.");
+      else toast("✅ You're subscribed! No discount on this account.");
+      onClose();
+    } else {
+      toast("Email not found. Sign up to get "+cfg.discPct+"% off!");
+      onClose();
+    }
+  };
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&check()} placeholder="Enter your email" style={{...iSt({borderRadius:50,textAlign:"center"})}}/>
+      <button onClick={check} className="btn" style={{padding:"12px",background:T.p,color:"#fff",borderRadius:50,fontSize:14,fontWeight:600}}>Check Status ✦</button>
+      <button onClick={onClose} className="btn" style={{background:"none",color:T.tl,fontSize:12}}>Cancel</button>
+    </div>
+  );
+}
+
+function NewsletterBar({cfg,subs,saveSubs,toast}){
+  const[email,setEmail]=useState("");
+  const sub=()=>{
+    if(!email||!/\S+@\S+\.\S+/.test(email)){toast("Please enter a valid email.");return;}
+    if(subs.find(s=>s.email===email)){toast("You're already subscribed! ✦");return;}
+    saveSubs([...subs,{id:uid(),email,date:new Date().toISOString()}]);
+    toast("Subscribed! Watch your inbox ✦");setEmail("");
+  };
+  return(
+    <div style={{background:"rgba(255,255,255,.05)",borderRadius:14,padding:"22px 24px",marginBottom:24,maxWidth:1160,margin:"0 auto 24px"}}>
+      <p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:20,color:"#FAF6EE",marginBottom:4}}>{cfg.newsletterTitle||"Stay in the loop ✦"}</p>
+      <p style={{fontSize:13,color:"rgba(255,255,255,.4)",marginBottom:14}}>{cfg.newsletterText}</p>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sub()} placeholder="your@email.com" style={{flex:1,minWidth:200,padding:"10px 16px",borderRadius:50,border:"1px solid rgba(255,255,255,.15)",background:"rgba(255,255,255,.07)",color:"#FAF6EE",fontSize:13}}/>
+        <button onClick={sub} className="btn" style={{background:T.p,color:"#fff",borderRadius:50,padding:"10px 22px",fontSize:13,fontWeight:600,flexShrink:0}}>Subscribe ✦</button>
+      </div>
+    </div>
+  );
+}
+
+function PopupEmailForm({cfg,subs,saveSubs,toast,onDone,btnLabel}){
+  const[email,setEmail]=useState("");
+  const sub=()=>{
+    if(!email||!/\S+@\S+\.\S+/.test(email)){toast("Enter a valid email.");return;}
+    if(subs.find(s=>s.email===email)){toast("Already subscribed! ✦");onDone();return;}
+    saveSubs([...subs,{id:uid(),email,disc:true,discUsed:false,date:new Date().toISOString()}]);
+    toast("Subscribed! Check your email for your discount ✦");onDone();
+  };
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+      <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sub()} placeholder="Enter your email" style={{...iSt({borderRadius:50,textAlign:"center"})}}/>
+      <button onClick={sub} className="btn" style={{padding:"12px",background:T.p,color:"#fff",borderRadius:50,fontSize:14,fontWeight:600}}>{btnLabel||"Get "+cfg.discPct+"% Off ✦"}</button>
+      <button onClick={onDone} className="btn" style={{background:"none",color:T.tl,fontSize:12,padding:"4px"}}>No thanks</button>
+    </div>
+  );
+}
+
+function SignupForm({cfg,subs,saveSubs,toast,onDone,onLogin}){
+  const[name,setName]=React.useState("");
+  const[email,setEmail]=React.useState("");
+  const[pass,setPass]=React.useState("");
+  const[err,setErr]=React.useState("");
+  const submit=()=>{
+    if(!name.trim()){setErr("Please enter your name.");return;}
+    if(!email||!/\S+@\S+\.\S+/.test(email)){setErr("Enter a valid email.");return;}
+    if(pass.length<6){setErr("Password must be at least 6 characters.");return;}
+    if(subs.find(s=>s.email===email.toLowerCase())){toast("Already subscribed! Check your discount at login. ✦");onDone();return;}
+    saveSubs([...subs,{id:uid(),name,email:email.toLowerCase(),pass,disc:true,discUsed:false,date:new Date().toISOString()}]);
+    toast("Account created! Your "+cfg.discPct+"% discount is ready ✦");onDone();
+  };
+  return(
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+      <input value={name} onChange={e=>{setName(e.target.value);setErr("");}} placeholder="Your name" style={iSt({borderRadius:10})}/>
+      <input value={email} onChange={e=>{setEmail(e.target.value);setErr("");}} placeholder="Email address" type="email" style={iSt({borderRadius:10})}/>
+      <input value={pass} onChange={e=>{setPass(e.target.value);setErr("");}} placeholder="Password" type="password" onKeyDown={e=>e.key==="Enter"&&submit()} style={iSt({borderRadius:10})}/>
+      {err&&<p style={{fontSize:12,color:"#E54040",textAlign:"left",marginTop:-4}}>{err}</p>}
+      <button onClick={submit} className="btn" style={{padding:"13px",background:T.p,color:"#fff",borderRadius:10,fontSize:14,fontWeight:600,marginTop:2}}>Create Account</button>
+      <p style={{fontSize:13,color:T.tl,marginTop:4}}>Already have an account? <button onClick={onLogin} className="btn" style={{background:"none",color:T.p,fontSize:13,fontWeight:600,textDecoration:"underline",padding:0}}>Log in</button></p>
+    </div>
+  );
+}
+
+/* ──── HOME PAGE ──── */
+function HomePage({cfg,items,onNav,currency}){
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  const overlay=cfg.heroOverlay||55;
+  return(
+    <div>
+      {/* 1. HERO */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",position:"relative",overflow:"hidden",minHeight:cfg.heroImage?"unset":"70vh",background:cfg.heroImage?"transparent":cfg.heroBgColor||"#1A1220"}}>
+        {cfg.heroImage&&<img src={cfg.heroImage} alt="hero" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"contain",objectPosition:"center",zIndex:0,display:"block"}}/>}
+        <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,"+overlay/100+")",zIndex:1}}/>
+        {[{t:"8%",l:"5%",s:24,d:0},{t:"20%",r:"6%",s:16,d:1.2},{b:"12%",r:"8%",s:20,d:.6},{b:"22%",l:"9%",s:14,d:1.8}].map((p,i)=>(
+          <span key={i} className="fl" style={{position:"absolute",fontSize:p.s,opacity:.25,color:cfg.colorPrimary||"#D4AF37",top:p.t,bottom:p.b,left:p.l,right:p.r,animationDelay:p.d+"s",zIndex:2}}>✦</span>
+        ))}
+        <div style={{position:"relative",zIndex:3,padding:"60px 24px",maxWidth:760}}>
+          <div className="fu" style={{animationDelay:"0ms"}}>
+            <p style={{fontSize:11,letterSpacing:".4em",textTransform:"uppercase",color:T.p,marginBottom:16,fontWeight:500}}>✦ handcrafted jewelry ✦</p>
+          </div>
+          <h1 className="fu" style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(46px,7vw,96px)",fontWeight:400,color:"#FAF6EE",lineHeight:.95,marginBottom:18,letterSpacing:"-.01em",animationDelay:"80ms"}}>
+            {cfg.heroTitle||"Discover Your Mystery Jar"}
+          </h1>
+          <div className="fu" style={{width:60,height:2,background:"linear-gradient(90deg,transparent,"+T.p+",transparent)",margin:"0 auto 20px",animationDelay:"140ms"}}/>
+          <p className="fu" style={{color:"rgba(250,246,238,.65)",fontSize:16,marginBottom:36,lineHeight:1.7,animationDelay:"180ms"}}>
+            {cfg.heroSubtitle||"Every jar is a unique handcrafted surprise ✦"}
+          </p>
+          {cfg.ctaVisible!==false&&(
+            <button className="fu btn" onClick={()=>onNav("catalog")} style={{padding:"14px 36px",background:T.p,color:"#fff",borderRadius:50,fontSize:15,fontWeight:600,letterSpacing:".04em",boxShadow:"0 4px 20px "+T.p+"44",animationDelay:"240ms"}}>
+              {cfg.ctaText||"Browse Collection"} →
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 2. DESCRIPTION */}
+      {cfg.descVisible!==false&&cfg.descText&&(
+        <div style={{textAlign:"center",padding:"64px 24px",maxWidth:680,margin:"0 auto"}}>
+          <p style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(17px,2.8vw,24px)",color:T.tm,lineHeight:1.9,fontStyle:"italic"}}>{cfg.descText}</p>
+        </div>
+      )}
+
+      {/* 3. FEATURED ITEMS */}
+      {cfg.featuredVisible!==false&&cfg.featuredItems&&cfg.featuredItems.length>0&&(()=>{
+        const featured=items.filter(i=>cfg.featuredItems.includes(i.id)).slice(0,4);
+        if(!featured.length)return null;
+        return(
+          <div style={{padding:"0 20px 64px",maxWidth:1160,margin:"0 auto"}}>
+            <div style={{textAlign:"center",marginBottom:32}}>
+              <p style={{fontSize:11,letterSpacing:".3em",textTransform:"uppercase",color:T.p,marginBottom:8}}>✦ curated for you ✦</p>
+              <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(28px,4vw,48px)",fontWeight:400,color:T.text}}>{cfg.featuredTitle||"Our Favourites ✦"}</h2>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:18}}>
+              {featured.map(it=><ProductCard key={it.id} item={it} cfg={cfg} onItem={()=>onNav("item",it)} currency={currency}/>)}
+            </div>
+            <div style={{textAlign:"center",marginTop:28}}>
+              <button onClick={()=>onNav("catalog")} className="btn" style={{padding:"11px 32px",border:"1.5px solid "+T.p,color:T.p,borderRadius:50,fontSize:14,background:"none",fontWeight:500}}>View Full Collection →</button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 4. REVIEWS */}
+      {cfg.reviewsVisible!==false&&cfg.reviews&&cfg.reviews.filter(r=>r.visible!==false).length>0&&(
+        <div style={{background:T.acc+"08",padding:"56px 20px",marginBottom:0}}>
+          <div style={{textAlign:"center",marginBottom:32}}>
+            <p style={{fontSize:11,letterSpacing:".3em",textTransform:"uppercase",color:T.p,marginBottom:8}}>✦ what customers say ✦</p>
+            <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(26px,4vw,44px)",fontWeight:400,color:T.text}}>Customer Reviews</h2>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16,maxWidth:1160,margin:"0 auto"}}>
+            {cfg.reviews.filter(r=>r.visible!==false).map(rv=>(
+              <div key={rv.id} style={{background:T.card,borderRadius:18,padding:"22px 20px",boxShadow:T.sh,border:"1px solid "+T.b}}>
+                <div style={{display:"flex",alignItems:"flex-start",gap:12,marginBottom:12}}>
+                  {rv.photo?(
+                    <div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",flexShrink:0,border:"2px solid "+T.p+"33"}}>
+                      <img src={rv.photo} alt={rv.name} onError={e=>e.target.style.display="none"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                    </div>
+                  ):(
+                    <div style={{width:44,height:44,borderRadius:"50%",background:T.p+"22",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,color:T.p}}>{(rv.name||"?")[0].toUpperCase()}</div>
+                  )}
+                  <div>
+                    <p style={{fontSize:13,fontWeight:600,color:T.text}}>{rv.name}</p>
+                    {rv.date&&<p style={{fontSize:11,color:T.tl}}>{rv.date}</p>}
+                    <Stars rating={rv.stars||5}/>
+                  </div>
+                </div>
+                <p style={{fontSize:14,color:T.tm,lineHeight:1.8,fontStyle:"italic"}}>"{rv.text}"</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 5. PHOTO CAROUSEL */}
+      {cfg.carouselVisible!==false&&cfg.carouselPhotos&&cfg.carouselPhotos.length>0&&(
+        <div style={{padding:"56px 0"}}>
+          <div style={{textAlign:"center",marginBottom:24}}>
+            <p style={{fontSize:11,letterSpacing:".3em",textTransform:"uppercase",color:T.p,marginBottom:8}}>✦ behind the scenes ✦</p>
+            <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(24px,3.5vw,40px)",fontWeight:400,color:T.text}}>{cfg.carouselTitle||"Behind the Scenes ✦"}</h2>
+          </div>
+          <div className="carousel-wrap">
+            <div className="carousel-track">
+              {[...cfg.carouselPhotos,...cfg.carouselPhotos].map((ph,i)=>(
+                <div key={i} style={{width:200,height:200,borderRadius:16,overflow:"hidden",flexShrink:0,background:T.p+"22"}}>
+                  <img src={ph.url} alt="" onError={e=>e.target.style.display="none"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. FAQ */}
+      {cfg.faqVisible!==false&&cfg.faqs&&cfg.faqs.filter(f=>f.visible!==false).length>0&&(
+        <div style={{padding:"56px 20px",maxWidth:760,margin:"0 auto"}}>
+          <div style={{textAlign:"center",marginBottom:32}}>
+            <p style={{fontSize:11,letterSpacing:".3em",textTransform:"uppercase",color:T.p,marginBottom:8}}>✦ questions ✦</p>
+            <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(26px,4vw,44px)",fontWeight:400,color:T.text}}>{cfg.faqTitle||"Frequently Asked Questions"}</h2>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {cfg.faqs.filter(f=>f.visible!==false).map(fq=><FAQItem key={fq.id} fq={fq} hf={hf}/>)}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FAQItem({fq,hf}){
+  const[open,setOpen]=useState(false);
+  return(
+    <div style={{background:T.card,borderRadius:14,overflow:"hidden",border:"1px solid "+T.b,boxShadow:T.sh}}>
+      <button onClick={()=>setOpen(o=>!o)} className="btn" style={{width:"100%",padding:"16px 20px",background:"none",display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:15,fontWeight:500,color:T.text,textAlign:"left",gap:12}}>
+        <span>{fq.q}</span>
+        <span style={{color:T.p,fontSize:18,flexShrink:0,transform:open?"rotate(45deg)":"rotate(0)",transition:"transform .2s"}}>+</span>
+      </button>
+      {open&&<div className="fu" style={{padding:"0 20px 16px",fontSize:14,color:T.tm,lineHeight:1.8}}>{fq.a}</div>}
+    </div>
+  );
+}
+
+/* ──── PRODUCT CARD ──── */
+function ProductCard({item,cfg,onItem,currency}){
+  const[h,setH]=useState(false);
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  const cur=currency||"RM";
+  return(
+    <div className="product-card" onMouseEnter={()=>setH(true)} onMouseLeave={()=>setH(false)} onClick={onItem}
+      style={{background:T.card,borderRadius:18,overflow:"hidden",boxShadow:h?T.sh2:T.sh,cursor:"pointer",border:"1px solid "+T.b}}>
+      <div style={{position:"relative",background:"linear-gradient(135deg,"+T.p+"15,"+T.p+"08)",overflow:"hidden"}}>
+        {item.images&&item.images[0]
+          ?<img src={item.images[0]} alt={item.name} onError={e=>e.target.style.display="none"} style={{display:"block",width:"100%",height:"auto",objectFit:"contain",transition:"transform .4s",transform:h?"scale(1.06)":"scale(1)"}}/>
+          :<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:48,color:T.p+"66"}}>✦</div>
+        }
+        {item.tags?.includes("new")&&<div style={{position:"absolute",top:10,right:10,background:T.p,color:"#fff",borderRadius:50,padding:"3px 10px",fontSize:9,fontWeight:700,letterSpacing:".08em"}}>NEW</div>}
+        {item.tags?.includes("bestseller")&&!item.tags?.includes("new")&&<div style={{position:"absolute",top:10,right:10,background:T.acc,color:"#fff",borderRadius:50,padding:"3px 10px",fontSize:9,fontWeight:700}}>★ BEST</div>}
+        {item.originalPrice&&<div style={{position:"absolute",top:10,left:10,background:"#E54040",color:"#fff",borderRadius:50,padding:"3px 10px",fontSize:9,fontWeight:700}}>SALE</div>}
+      </div>
+      <div style={{padding:"13px 14px 14px"}}>
+        {item.category&&<p style={{fontSize:9,color:T.p,textTransform:"uppercase",letterSpacing:".14em",fontWeight:700,marginBottom:3}}>{item.category}</p>}
+        <h3 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:17,fontWeight:500,color:T.text,lineHeight:1.25,marginBottom:5}}>{item.name}</h3>
+        {item.rating>0&&<div style={{display:"flex",alignItems:"center",gap:5,marginBottom:5}}><Stars rating={item.rating}/><span style={{fontSize:11,color:T.tl}}>({item.ratingCount||0})</span></div>}
+        <div style={{display:"flex",alignItems:"center",gap:7}}>
+          {(()=>{
+            const sizePrices=(item.sizes||[]).map(s=>s.price).filter(p=>p>0);
+            const hasSizes=sizePrices.length>0;
+            const minPrice=hasSizes?Math.min(...sizePrices):item.price;
+            return <>
+              <span style={{fontSize:15,fontWeight:700,color:T.text}}>{hasSizes?"From ":""}{cur}{(minPrice||0).toFixed(2)}</span>
+              {item.originalPrice&&<span style={{fontSize:11,color:T.tl,textDecoration:"line-through"}}>{cur}{item.originalPrice.toFixed(2)}</span>}
+            </>;
+          })()}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──── CATALOG PAGE ──── */
+function CatalogPage({cfg,items,onItem,searchQ,setSearchQ,currency}){
+  const[activeCat,setActiveCat]=useState("All");
+  const[sortBy,setSortBy]=useState("default");
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  const cats=["All",...new Set(items.map(i=>i.category).filter(Boolean))];
+  let list=items.filter(i=>{
+    const matchQ=!searchQ||i.name.toLowerCase().includes(searchQ.toLowerCase())||i.description?.toLowerCase().includes(searchQ.toLowerCase());
+    const matchC=activeCat==="All"||i.category===activeCat;
+    return matchQ&&matchC;
+  });
+  if(sortBy==="price-asc")list=[...list].sort((a,b)=>a.price-b.price);
+  if(sortBy==="price-desc")list=[...list].sort((a,b)=>b.price-a.price);
+  if(sortBy==="name")list=[...list].sort((a,b)=>a.name.localeCompare(b.name));
+  if(sortBy==="rating")list=[...list].sort((a,b)=>(b.rating||0)-(a.rating||0));
+  return(
+    <div style={{maxWidth:1160,margin:"0 auto",padding:"28px 16px 60px"}} className="page-wrap">
+      <div style={{marginBottom:28}}>
+        <p style={{fontSize:11,letterSpacing:".3em",textTransform:"uppercase",color:T.p,marginBottom:6}}>✦ collection</p>
+        <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(30px,5vw,58px)",fontWeight:400,color:T.text}}>All Jewelry Jars</h1>
+      </div>
+      {/* Search + sort */}
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:20,alignItems:"center"}}>
+        <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Search…" style={{...iSt(),flex:1,minWidth:160,borderRadius:50,padding:"9px 18px"}}/>
+        <select value={sortBy} onChange={e=>setSortBy(e.target.value)} style={{...iSt(),width:"auto",padding:"9px 14px",cursor:"pointer",borderRadius:50}}>
+          <option value="default">Sort: Default</option>
+          <option value="price-asc">Price: Low → High</option>
+          <option value="price-desc">Price: High → Low</option>
+          <option value="name">Name A–Z</option>
+          <option value="rating">Top Rated</option>
+        </select>
+      </div>
+      {/* Category pills */}
+      {cats.length>1&&(
+        <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:24}}>
+          {cats.map(cat=>(
+            <button key={cat} onClick={()=>setActiveCat(cat)} className="btn"
+              style={{padding:"6px 18px",borderRadius:50,border:"1.5px solid "+(activeCat===cat?T.p:T.b),background:activeCat===cat?T.p:"none",color:activeCat===cat?"#fff":T.tm,fontSize:13,fontWeight:600,transition:"all .18s"}}>
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+      {list.length===0?(
+        <div style={{textAlign:"center",padding:"80px 0"}}>
+          <div style={{fontSize:48,color:T.p,marginBottom:16}}>✦</div>
+          <p style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:22,color:T.text,marginBottom:8}}>No items found</p>
+          <p style={{fontSize:14,color:T.tl}}>Try a different search or category.</p>
+        </div>
+      ):(
+        <div className="catalog-grid">
+          {list.map((it,i)=><div key={it.id} className="fu" style={{animationDelay:i*40+"ms"}}><ProductCard item={it} cfg={cfg} onItem={()=>onItem(it)} currency={currency}/></div>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ──── ITEM PAGE ──── */
+function ItemPage({item,items,cfg,onBack,onAdd,onItem,currency}){
+  const[si,setSi]=useState(0);
+  const[qty,setQty]=useState(1);
+  const[selColor,setSelColor]=useState("");
+  const[selSize,setSelSize]=useState("");
+  const[selStyle,setSelStyle]=useState("");
+  const[note,setNote]=useState("");
+  const[err,setErr]=useState("");
+  const[chartOpen,setChartOpen]=useState(false);
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  const cur=currency||"RM";
+
+  // Size = absolute price (main). Color & Style = addons on top of size price.
+  const varPrice=(()=>{
+    let base=item.price||0;
+    if(selSize&&item.sizes){const s=item.sizes.find(s=>s.label===selSize);if(s&&s.price>0)base=s.price;}
+    if(selColor&&item.colors){const c=item.colors.find(c=>c.label===selColor);if(c&&c.price>0)base+=c.price;}
+    if(selStyle&&item.styles){const s=item.styles.find(s=>s.label===selStyle);if(s&&s.price>0)base+=s.price;}
+    return base;
+  })();
+
+  const handleAdd=()=>{
+    if(item.colors&&item.colors.length>0&&!selColor){setErr("Please select a color.");return;}
+    if(item.sizes&&item.sizes.length>0&&!selSize){setErr("Please select a size.");return;}
+    if(item.styles&&item.styles.length>0&&!selStyle){setErr("Please select a style.");return;}
+    setErr("");
+    onAdd(item,{color:selColor,size:selSize,style:selStyle,note,varPrice},qty);
+  };
+
+  const recs=items.filter(i=>i.id!==item.id&&(!item.category||i.category===item.category)).slice(0,4);
+  const pct=item.originalPrice?Math.round((1-item.price/item.originalPrice)*100):0;
+  const mediaList=item.images||[];
+
+  return(
+    <div style={{maxWidth:1160,margin:"0 auto",padding:"28px 16px 60px"}} className="page-wrap">
+      <button onClick={onBack} className="btn" style={{background:"none",color:T.tl,fontSize:13,marginBottom:22,display:"flex",alignItems:"center",gap:5}}>← Back to Collection</button>
+
+      <div className="item-page-grid" style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:44,marginBottom:44}}>
+        {/* Left: media */}
+        <div>
+          <div style={{borderRadius:22,overflow:"hidden",background:T.p+"12",boxShadow:T.sh2}}>
+            {mediaList[si]
+              ?<img src={mediaList[si]} alt={item.name} onError={e=>e.target.style.display="none"} style={{display:"block",width:"100%",height:"auto",objectFit:"contain"}}/>
+              :<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:64,color:T.p+"66"}}>✦</div>
+            }
+          </div>
+          {mediaList.length>1&&(
+            <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+              {mediaList.map((m,i)=>(
+                <div key={i} onClick={()=>setSi(i)} style={{width:60,height:60,borderRadius:10,overflow:"hidden",border:"2px solid "+(si===i?T.p:"transparent"),cursor:"pointer",background:T.p+"12",flexShrink:0,transition:"border-color .2s"}}>
+                  <img src={m} alt="" onError={e=>e.target.style.display="none"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right: details */}
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
+          <div>
+            {item.category&&<p style={{fontSize:10,color:T.p,textTransform:"uppercase",letterSpacing:".15em",fontWeight:700,marginBottom:5}}>{item.category}</p>}
+            <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(26px,4vw,48px)",fontWeight:400,color:T.text,lineHeight:1.1,marginBottom:10}}>{item.name}</h1>
+            {/* Rating */}
+            {item.rating>0&&(
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+                <Stars rating={item.rating} size={16}/>
+                <span style={{fontSize:13,color:T.tl}}>{item.ratingCount>0&&"("+item.ratingCount+" reviews)"}</span>
+              </div>
+            )}
+            <div style={{display:"flex",alignItems:"baseline",gap:10,flexWrap:"wrap"}}>
+              {(()=>{
+                const hasSizeOpts=item.sizes&&item.sizes.length>0;
+                const showFrom=hasSizeOpts&&!selSize;
+                return <>
+                  <span style={{fontSize:28,fontWeight:700,color:T.text}}>{showFrom?"From ":""}{cur}{varPrice.toFixed(2)}</span>
+                  {item.originalPrice&&<>
+                    <span style={{fontSize:14,color:T.tl,textDecoration:"line-through"}}>{cur}{item.originalPrice.toFixed(2)}</span>
+                    <span style={{background:"#E54040",color:"#fff",fontSize:11,fontWeight:700,borderRadius:50,padding:"2px 10px"}}>{pct}% off</span>
+                  </>}
+                </>;
+              })()}
+            </div>
+          </div>
+
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{width:9,height:9,borderRadius:"50%",background:item.stock>5?"#3DA84A":item.stock>0?"#F59E0B":"#E54040"}}/>
+            <span style={{fontSize:13,color:T.tm}}>{item.stock>5?"In stock":item.stock>0?"Only "+item.stock+" left!":"Out of stock"}</span>
+          </div>
+
+          {/* COLOR */}
+          {item.colors&&item.colors.length>0&&(
+            <div>
+              <Lbl c={"Color"+(selColor?" — "+selColor:"")}/>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
+                {item.colors.map(co=>(
+                  <button key={co.label} onClick={()=>setSelColor(co.label)} className="btn"
+                    style={{padding:"7px 16px",borderRadius:50,border:"1.5px solid "+(selColor===co.label?T.p:T.b),background:selColor===co.label?T.p+"15":"none",color:selColor===co.label?T.p:T.tm,fontSize:13,fontWeight:600,transition:"all .15s"}}>
+                    {co.hex&&<span style={{display:"inline-block",width:12,height:12,borderRadius:"50%",background:co.hex,marginRight:6,border:"1px solid rgba(0,0,0,.15)",verticalAlign:"middle"}}/>}
+                    {co.label}{co.price>0&&<span style={{fontSize:11,opacity:.75,marginLeft:4}}>+{cur}{parseFloat(co.price).toFixed(2)}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SIZE */}
+          {item.sizes&&item.sizes.length>0&&(
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <Lbl c="Size"/>
+                {item.sizeChart&&<button onClick={()=>setChartOpen(true)} className="btn" style={{background:"none",color:T.p,fontSize:12,fontWeight:600,textDecoration:"underline"}}>📏 Size Guide</button>}
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
+                {item.sizes.map(sz=>(
+                  <button key={sz.label} onClick={()=>setSelSize(sz.label)} className="btn"
+                    style={{padding:"7px 18px",borderRadius:50,border:"1.5px solid "+(selSize===sz.label?T.p:T.b),background:selSize===sz.label?T.p:"none",color:selSize===sz.label?"#fff":T.tm,fontSize:13,fontWeight:600,transition:"all .15s"}}>
+                    {sz.label}{sz.price>0&&<span style={{fontSize:11,opacity:.75,marginLeft:4}}>{cur}{parseFloat(sz.price).toFixed(2)}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* STYLE */}
+          {item.styles&&item.styles.length>0&&(
+            <div>
+              <Lbl c="Style"/>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
+                {item.styles.map(st=>(
+                  <button key={st.label} onClick={()=>setSelStyle(st.label)} className="btn"
+                    style={{padding:"7px 16px",borderRadius:50,border:"1.5px solid "+(selStyle===st.label?T.p:T.b),background:selStyle===st.label?T.p+"15":"none",color:selStyle===st.label?T.p:T.tm,fontSize:13,fontWeight:600,transition:"all .15s"}}>
+                    {st.label}{st.price>0&&<span style={{fontSize:11,opacity:.75,marginLeft:4}}>+{cur}{parseFloat(st.price).toFixed(2)}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* NOTE */}
+          {item.hasNote&&(
+            <div>
+              <Lbl c="Additional Notes / Preferences"/>
+              <textarea value={note} onChange={e=>setNote(e.target.value)} rows={3}
+                placeholder={item.notePlaceholder||"Any preferences? Leave blank for a surprise! ✦"}
+                style={{...iSt(),resize:"vertical",borderRadius:12,lineHeight:1.7}}/>
+            </div>
+          )}
+
+          {/* QTY + ADD */}
+          {err&&<p style={{fontSize:13,color:"#E54040"}}>{err}</p>}
+          <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+            <div style={{display:"flex",alignItems:"center",border:"1.5px solid "+T.b,borderRadius:50,overflow:"hidden",background:T.card}}>
+              <button onClick={()=>setQty(Math.max(1,qty-1))} className="btn" style={{width:42,height:42,background:"none",fontSize:20,color:T.text,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+              <span style={{width:36,textAlign:"center",fontSize:14,fontWeight:600}}>{qty}</span>
+              <button onClick={()=>setQty(qty+1)} className="btn" style={{width:42,height:42,background:"none",fontSize:20,color:T.text,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+            </div>
+            <button onClick={handleAdd} disabled={item.stock===0} className="btn"
+              style={{flex:1,minWidth:140,padding:"13px 20px",background:item.stock===0?T.b:T.p,color:item.stock===0?T.tl:"#fff",borderRadius:50,fontSize:14,fontWeight:700,cursor:item.stock===0?"not-allowed":"pointer",boxShadow:item.stock===0?"none":"0 4px 18px "+T.p+"44"}}>
+              {item.stock===0?"Out of Stock":"Add to Cart ✦"}
+            </button>
+          </div>
+
+          {/* PURCHASE COUNT */}
+          {item.purchaseCount>0&&(
+            <p style={{fontSize:12,color:T.tl,display:"flex",alignItems:"center",gap:5}}>
+              <span style={{color:T.p}}>✦</span>{item.purchaseCount}+ people have purchased this
+            </p>
+          )}
+
+          {/* SIZE CHART MODAL */}
+          {chartOpen&&item.sizeChart&&(
+            <>
+              <div className="fi" onClick={()=>setChartOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",zIndex:500}}/>
+              <div style={{position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",zIndex:501,borderRadius:18,overflow:"hidden",maxWidth:"90vw",maxHeight:"90vh"}}>
+                <img src={item.sizeChart} alt="Size Guide" style={{display:"block",maxWidth:"90vw",maxHeight:"85vh",objectFit:"contain"}}/>
+                <button onClick={()=>setChartOpen(false)} className="btn" style={{position:"absolute",top:10,right:10,width:32,height:32,borderRadius:"50%",background:"rgba(0,0,0,.65)",color:"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Description */}
+      {item.description&&(
+        <div style={{background:T.card,borderRadius:18,padding:"22px 24px",marginBottom:36,border:"1px solid "+T.b,boxShadow:T.sh}}>
+          <h3 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:22,fontWeight:400,color:T.text,marginBottom:10}}>Product Details</h3>
+          <p style={{fontSize:14,lineHeight:1.9,color:T.tm,whiteSpace:"pre-line"}}>{item.description}</p>
+        </div>
+      )}
+
+      {/* Recommendations */}
+      {recs.length>0&&(
+        <div>
+          <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:30,fontWeight:400,color:T.text,marginBottom:20,textAlign:"center"}}>You Might Also Love ✦</h2>
+          <div className="catalog-grid">{recs.map(r=><ProductCard key={r.id} item={r} cfg={cfg} onItem={()=>onItem(r)} currency={currency}/>)}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ──── CART PAGE ──── */
+function CartPage({cart,cfg,onQty,onRem,onBack,saveOrders,orders,currency,subs,saveSubs}){
+  const[name,setName]=useState("");const[phone,setPhone]=useState("");
+  const[addr,setAddr]=useState("");const[state,setState]=useState("");
+  const[promoInput,setPromoInput]=useState("");const[promoApplied,setPromoApplied]=useState(null);
+  const[promoErr,setPromoErr]=useState("");const[formErr,setFormErr]=useState("");
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  const cur=currency||"RM";
+  const isEM=EM_STATES.includes(state);
+  const shipping=state?(isEM?(cfg.shippingEM||15):(cfg.shippingWM||10)):0;
+  const sub=cart.reduce((s,c)=>s+(c.choices?.varPrice||c.price)*c.qty,0);
+  let discAmt=0,discLabel="";
+  if(promoApplied==="sub"){discAmt=sub*(cfg.discPct/100);discLabel="Subscriber "+cfg.discPct+"% off";}
+  else if(promoApplied==="promo"&&cfg.promoPct>0){discAmt=sub*(cfg.promoPct/100);discLabel="Promo "+cfg.promoPct+"% off";}
+  const total=sub-discAmt+shipping;
+
+  const applyPromo=()=>{
+    const code=promoInput.trim().toUpperCase();
+    if(!code){setPromoErr("Enter a code.");return;}
+    if(cfg.promoCode&&code===cfg.promoCode.toUpperCase()){setPromoApplied("promo");setPromoErr("");return;}
+    const sub2=subs.find(s=>s.email===code.toLowerCase()&&s.disc&&!s.discUsed);
+    if(sub2){setPromoApplied("sub");setPromoErr("Subscriber discount applied!");return;}
+    setPromoErr("Invalid code. Try your email address if you subscribed.");
+  };
+
+  const checkout=()=>{
+    if(!name.trim()){setFormErr("Please enter your name.");return;}
+    if(!phone.trim()){setFormErr("Please enter your phone number.");return;}
+    if(!addr.trim()){setFormErr("Please enter your address.");return;}
+    if(!state){setFormErr("Please select your state.");return;}
+    setFormErr("");
+    const lines=cart.map(c=>{
+      let l="• "+c.name+" x"+c.qty+" — "+cur+(((c.choices?.varPrice||c.price)*c.qty).toFixed(2));
+      const ch=[];
+      if(c.choices?.color)ch.push("Color: "+c.choices.color);
+      if(c.choices?.size)ch.push("Size: "+c.choices.size);
+      if(c.choices?.style)ch.push("Style: "+c.choices.style);
+      if(c.choices?.note)ch.push("Note: "+c.choices.note);
+      if(ch.length)l+="\n  ("+ch.join(", ")+")";
+      return l;
+    }).join("\n");
+    let msg="Hello! I'd like to place an order ✦\n\n*Order Details:*\n"+lines+"\n\n";
+    if(discAmt>0)msg+="Discount: -"+cur+discAmt.toFixed(2)+"\n";
+    msg+="Shipping ("+state+"): "+cur+shipping.toFixed(2)+"\n";
+    msg+="*Total: "+cur+total.toFixed(2)+"*\n\n";
+    msg+="Name: "+name+"\nPhone: "+phone+"\nAddress: "+addr+", "+state;
+    window.open("https://wa.me/"+(cfg.whatsapp||"60123456789")+"?text="+encodeURIComponent(msg),"_blank");
+    // Save order
+    const newOrder={id:uid(),date:new Date().toISOString(),name,phone,state,total,items:cart.map(c=>c.name+"x"+c.qty)};
+    saveOrders([...orders,newOrder]);
+    // Mark sub discount used
+    if(promoApplied==="sub"&&promoInput){
+      const updated=subs.map(s=>s.email===promoInput.toLowerCase()?{...s,discUsed:true}:s);
+      saveSubs(updated);
+    }
+  };
+
+  return(
+    <div style={{maxWidth:960,margin:"0 auto",padding:"28px 16px 60px"}} className="page-wrap">
+      <button onClick={onBack} className="btn" style={{background:"none",color:T.tl,fontSize:13,marginBottom:24,display:"flex",alignItems:"center",gap:5}}>← Continue Shopping</button>
+      <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(28px,4vw,48px)",fontWeight:400,color:T.text,marginBottom:24}}>Your Cart ✦</h1>
+
+      {cart.length===0?(
+        <div style={{textAlign:"center",padding:"72px 0"}}>
+          <div style={{fontSize:48,color:T.p,marginBottom:16}}>✦</div>
+          <p style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:22,color:T.text,marginBottom:12}}>Your cart is empty</p>
+          <button onClick={onBack} className="btn" style={{padding:"11px 28px",background:T.p,color:"#fff",borderRadius:50,fontSize:14,fontWeight:600}}>Browse Collection</button>
+        </div>
+      ):(
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:24,alignItems:"start"}}>
+          {/* Cart items */}
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {cart.map(it=>(
+              <div key={it.cartId} style={{background:T.card,borderRadius:16,padding:"14px 16px",display:"flex",gap:12,boxShadow:T.sh,border:"1px solid "+T.b}}>
+                <div style={{width:72,height:72,borderRadius:12,overflow:"hidden",background:T.p+"15",flexShrink:0}}>
+                  {it.images?.[0]?<img src={it.images[0]} alt={it.name} onError={e=>e.target.style.display="none"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:T.p+"66"}}>✦</div>}
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:15,color:T.text,marginBottom:3}}>{it.name}</p>
+                  <div style={{fontSize:12,color:T.tm,marginBottom:6}}>
+                    {it.choices?.color&&<span style={{marginRight:8}}>Color: {it.choices.color}</span>}
+                    {it.choices?.size&&<span style={{marginRight:8}}>Size: {it.choices.size}</span>}
+                    {it.choices?.style&&<span>Style: {it.choices.style}</span>}
+                    {it.choices?.note&&<p style={{fontSize:11,color:T.tl,marginTop:2}}>Note: {it.choices.note}</p>}
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{display:"flex",alignItems:"center",border:"1px solid "+T.b,borderRadius:50,overflow:"hidden"}}>
+                      <button onClick={()=>onQty(it.cartId,it.qty-1)} className="btn" style={{width:28,height:28,background:"none",fontSize:16,color:T.text,display:"flex",alignItems:"center",justifyContent:"center"}}>−</button>
+                      <span style={{width:26,textAlign:"center",fontSize:13,fontWeight:600}}>{it.qty}</span>
+                      <button onClick={()=>onQty(it.cartId,it.qty+1)} className="btn" style={{width:28,height:28,background:"none",fontSize:16,color:T.text,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                      <span style={{fontSize:14,fontWeight:700,color:T.text}}>{cur}{((it.choices?.varPrice||it.price)*it.qty).toFixed(2)}</span>
+                      <button onClick={()=>onRem(it.cartId)} className="btn" style={{background:"none",color:T.tl,fontSize:11,textDecoration:"underline"}}>remove</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Checkout form */}
+          <div style={{background:T.card,borderRadius:20,padding:"22px 20px",boxShadow:T.sh,border:"1px solid "+T.b,display:"flex",flexDirection:"column",gap:13}}>
+            <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:22,fontWeight:400,color:T.text,marginBottom:4}}>Order Details</h2>
+            <div><Lbl c="Full Name *"/><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your full name" style={iSt()}/></div>
+            <div><Lbl c="Phone Number *"/><input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="e.g. 0123456789" style={iSt()}/></div>
+            <div><Lbl c="Delivery Address *"/><textarea value={addr} onChange={e=>setAddr(e.target.value)} rows={3} placeholder="Street, postcode, city" style={{...iSt(),resize:"vertical",borderRadius:10,lineHeight:1.6}}/></div>
+            <div>
+              <Lbl c="State *"/>
+              <select value={state} onChange={e=>setState(e.target.value)} style={{...iSt(),cursor:"pointer"}}>
+                <option value="">— Select your state —</option>
+                <optgroup label="West Malaysia">{WM_STATES.map(s=><option key={s} value={s}>{s}</option>)}</optgroup>
+                <optgroup label="East Malaysia">{EM_STATES.map(s=><option key={s} value={s}>{s}</option>)}</optgroup>
+              </select>
+              {state&&<p style={{fontSize:11,color:T.tl,marginTop:4}}>Shipping: {isEM?"East":"West"} Malaysia — {cur}{shipping.toFixed(2)}</p>}
+            </div>
+            {/* Promo */}
+            {!promoApplied&&(
+              <div style={{display:"flex",gap:7}}>
+                <input placeholder="Promo code / subscriber email" value={promoInput} onChange={e=>{setPromoInput(e.target.value);setPromoErr("");}} onKeyDown={e=>e.key==="Enter"&&applyPromo()} style={{...iSt(),flex:1,fontSize:12}}/>
+                <button onClick={applyPromo} className="btn" style={{background:T.acc,color:"#fff",borderRadius:9,padding:"0 14px",fontSize:12,flexShrink:0}}>Apply</button>
+              </div>
+            )}
+            {promoErr&&<p style={{fontSize:12,color:promoApplied?"#3DA84A":"#E54040"}}>{promoErr}</p>}
+            {promoApplied&&<div style={{background:T.p+"15",borderRadius:9,padding:"7px 12px",fontSize:12,color:T.p,display:"flex",justifyContent:"space-between"}}><span>✓ {discLabel}</span><button onClick={()=>{setPromoApplied(null);setPromoInput("");}} className="btn" style={{background:"none",color:T.p,fontSize:11,textDecoration:"underline"}}>remove</button></div>}
+            {/* Summary */}
+            <div style={{borderTop:"1px solid "+T.b,paddingTop:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:13,color:T.tm}}>Subtotal</span><span style={{fontSize:13}}>{cur}{sub.toFixed(2)}</span></div>
+              {discAmt>0&&<div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:13,color:T.p}}>Discount</span><span style={{fontSize:13,color:T.p}}>−{cur}{discAmt.toFixed(2)}</span></div>}
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:13,color:T.tm}}>Shipping{state?" ("+state+")":""}</span><span style={{fontSize:13}}>{state?cur+shipping.toFixed(2):"—"}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:9,paddingTop:9,borderTop:"1px solid "+T.b}}><span style={{fontSize:15,fontWeight:700,color:T.text}}>Total</span><span style={{fontSize:18,fontWeight:700,color:T.text}}>{cur}{state?total.toFixed(2):"—"}</span></div>
+            </div>
+            {formErr&&<p style={{fontSize:13,color:"#E54040"}}>{formErr}</p>}
+            <button onClick={checkout} className="btn" style={{width:"100%",padding:"14px",background:"#25D366",color:"#fff",borderRadius:14,fontSize:15,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:10,boxShadow:"0 4px 16px rgba(37,211,102,.3)"}}>
+              <span>💬</span><span>Checkout via WhatsApp</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ──── STATIC PAGES ──── */
+function AboutPage({cfg,onNav}){
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  return(<div style={{maxWidth:760,margin:"0 auto",padding:"48px 20px 64px"}}>
+    <button onClick={()=>onNav("home")} className="btn" style={{background:"none",color:T.tl,fontSize:13,marginBottom:28,display:"flex",alignItems:"center",gap:5}}>← Home</button>
+    <div style={{textAlign:"center",marginBottom:36}}>
+      <span style={{fontSize:36,color:T.p}}>✦</span>
+      <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(32px,5vw,56px)",fontWeight:400,color:T.text,margin:"10px 0"}}>{cfg.shopName}</h1>
+    </div>
+    <div style={{background:T.card,borderRadius:20,padding:"30px 26px",boxShadow:T.sh,border:"1px solid "+T.b,marginBottom:20}}>
+      <p style={{fontSize:15,lineHeight:2,color:T.tm,whiteSpace:"pre-line"}}>{cfg.aboutText}</p>
+    </div>
+  </div>);
+}
+
+function ContactPage({cfg,onNav}){
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  const links=[
+    {icon:"💬",label:"WhatsApp",val:cfg.whatsapp,href:"https://wa.me/"+(cfg.whatsapp||"")},
+    cfg.contactEmail&&{icon:"✉️",label:"Email",val:cfg.contactEmail,href:"mailto:"+cfg.contactEmail},
+    cfg.contactIG&&{icon:"📸",label:"Instagram",val:cfg.contactIG,href:cfg.contactIGUrl||"#"},
+    cfg.contactTT&&{icon:"🎵",label:"TikTok",val:cfg.contactTT,href:cfg.contactTTUrl||"#"},
+  ].filter(Boolean);
+  return(<div style={{maxWidth:600,margin:"0 auto",padding:"48px 20px 64px"}}>
+    <button onClick={()=>onNav("home")} className="btn" style={{background:"none",color:T.tl,fontSize:13,marginBottom:28,display:"flex",alignItems:"center",gap:5}}>← Home</button>
+    <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(30px,5vw,52px)",fontWeight:400,color:T.text,marginBottom:30,textAlign:"center"}}>Get in Touch ✦</h1>
+    <div style={{display:"flex",flexDirection:"column",gap:12}}>
+      {links.map(({icon,label,val,href})=>(
+        <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}>
+          <div className="product-card" style={{background:T.card,borderRadius:16,padding:"18px 20px",display:"flex",alignItems:"center",gap:16,boxShadow:T.sh,border:"1px solid "+T.b,cursor:"pointer"}}>
+            <div style={{width:46,height:46,borderRadius:13,background:T.p+"18",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{icon}</div>
+            <div><p style={{fontWeight:600,color:T.text,marginBottom:2}}>{label}</p><p style={{fontSize:13,color:T.tm}}>{val}</p></div>
+            <div style={{marginLeft:"auto",color:T.p,fontWeight:700}}>→</div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>);
+}
+
+function PrivacyPage({cfg,onNav}){
+  const hf=cfg.fontHeading||"Cormorant Garamond";
+  const sections=[
+    ["Information We Collect","We collect your name, phone number, and delivery address when you place an order via WhatsApp. We also collect email addresses when you subscribe to our newsletter."],
+    ["How We Use Your Information","Your information is used solely to process orders and send relevant updates. We do not sell your data to any third parties."],
+    ["WhatsApp Orders","When you checkout, you are redirected to WhatsApp. Your order details are shared only with our team to fulfil your order."],
+    ["Newsletter","If you subscribe, your email is stored securely and used only to inform you of new products and promotions. You may unsubscribe at any time."],
+    ["Cookies & Storage","We use browser local storage to save your cart. No third-party tracking cookies are used."],
+    ["Your Rights","You may request access to or deletion of your personal data at any time by contacting us."],
+  ];
+  return(<div style={{maxWidth:720,margin:"0 auto",padding:"48px 20px 64px"}}>
+    <button onClick={()=>onNav("home")} className="btn" style={{background:"none",color:T.tl,fontSize:13,marginBottom:28,display:"flex",alignItems:"center",gap:5}}>← Home</button>
+    <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(28px,4vw,48px)",fontWeight:400,color:T.text,marginBottom:6}}>Privacy Policy</h1>
+    <p style={{fontSize:13,color:T.tl,marginBottom:28}}>Last updated: {new Date().toLocaleDateString("en-MY",{year:"numeric",month:"long"})}</p>
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      {sections.map(([t,d])=>(
+        <div key={t} style={{background:T.card,borderRadius:14,padding:"18px 20px",boxShadow:T.sh,border:"1px solid "+T.b}}>
+          <h3 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:18,fontWeight:400,color:T.text,marginBottom:7}}>{t}</h3>
+          <p style={{fontSize:14,lineHeight:1.85,color:T.tm}}>{d}</p>
+        </div>
+      ))}
+    </div>
+  </div>);
+}
+
+/* ──── ADMIN PAGE ──── */
+function SBox({title,children,desc}){
+  return(
+    <div style={{background:T.card,borderRadius:16,padding:"20px",boxShadow:T.sh,border:"1px solid "+T.b}}>
+      <p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:18,color:T.text,marginBottom:desc?4:14}}>{title}</p>
+      {desc&&<p style={{fontSize:12,color:T.tl,marginBottom:12}}>{desc}</p>}
+      {children}
+    </div>
+  );
+}
+
+function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,onBack,toast}){
+  const[pw,setPw]=useState("");const[err,setErr]=useState("");
+  const[tab,setTab]=useState("products");
+  const[ec,setEc]=useState({...cfg});
+  const[editItem,setEditItem]=useState(null);
+  const[testStatus,setTestStatus]=useState("");
+
+  useEffect(()=>setEc({...cfg}),[cfg]);
+  const se=(k,v)=>setEc(p=>({...p,[k]:v}));
+
+  if(!ok)return(
+    <div style={{minHeight:"80vh",display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div style={{background:T.card,borderRadius:22,padding:"40px 32px",width:"min(380px,100%)",boxShadow:T.sh2,textAlign:"center",border:"1px solid "+T.b}}>
+        <div style={{fontSize:36,marginBottom:12,color:T.p}}>🔐</div>
+        <h2 style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:26,color:T.text,marginBottom:7,fontWeight:400}}>Admin Access</h2>
+        <p style={{fontSize:13,color:T.tl,marginBottom:20}}>Enter your password to continue</p>
+        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!onAuth(pw))setErr("Wrong password.");}} placeholder="Admin password" style={{...iSt(),marginBottom:9}}/>
+        {err&&<p style={{fontSize:13,color:"#E54040",marginBottom:9}}>{err}</p>}
+        <button onClick={()=>{if(!onAuth(pw))setErr("Wrong password.");}} className="btn" style={{width:"100%",padding:12,background:T.p,color:"#fff",borderRadius:11,fontSize:14,marginBottom:10,fontWeight:600}}>Enter</button>
+        <button onClick={onBack} className="btn" style={{background:"none",color:T.tl,fontSize:13}}>← Back to shop</button>
+      </div>
+    </div>
+  );
+
+  const TABS=[["products","📦 Products"],["homepage","🏠 Homepage"],["design","🎨 Design"],["customers","👥 Customers"],["orders","📋 Orders"],["settings","⚙️ Settings"]];
+
+  return(
+    <div style={{maxWidth:1100,margin:"0 auto",padding:"26px 16px 56px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:10}}>
+        <div>
+          <h1 style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:32,color:T.text,fontWeight:400}}>Admin Panel</h1>
+          <p style={{fontSize:13,color:T.tl}}>Manage your jewelry jar shop</p>
+        </div>
+        <button onClick={onBack} className="btn" style={{background:T.card,border:"1.5px solid "+T.b,borderRadius:50,padding:"8px 18px",fontSize:13,color:T.text}}>← Back to Shop</button>
+      </div>
+      <div style={{display:"flex",borderBottom:"1px solid "+T.b,marginBottom:24,overflowX:"auto",gap:0}}>
+        {TABS.map(([t,l])=>(
+          <button key={t} className={"admin-tab-btn"+(tab===t?" active":"")} onClick={()=>setTab(t)} style={{color:tab===t?T.text:T.tl}}>{l}</button>
+        ))}
+      </div>
+
+      {/* ── PRODUCTS TAB ── */}
+      {tab==="products"&&(
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <p style={{fontSize:13,color:T.tm}}>{items.length} item{items.length!==1?"s":""}</p>
+            <button onClick={()=>setEditItem({})} className="btn" style={{background:T.p,color:"#fff",borderRadius:50,padding:"9px 20px",fontSize:13,fontWeight:600}}>+ Add New Item</button>
+          </div>
+          {editItem!==null&&<ItemFormAdmin item={editItem.id?editItem:null} cfg={cfg} onSave={d=>{if(d.id)saveItems(items.map(i=>i.id===d.id?d:i));else saveItems([...items,{id:uid(),...d}]);toast(d.id?"Updated ✓":"Added ✓");setEditItem(null);}} onClose={()=>setEditItem(null)}/>}
+          {items.length===0&&!editItem&&<div style={{textAlign:"center",padding:"48px 0",color:T.tl}}><div style={{fontSize:44,color:T.p,marginBottom:12}}>✦</div><p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:20,color:T.text}}>No items yet</p></div>}
+          <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            {items.map(it=>(
+              <div key={it.id} style={{background:T.card,borderRadius:13,padding:"13px 15px",display:"flex",gap:11,alignItems:"center",boxShadow:T.sh,flexWrap:"wrap",border:"1px solid "+T.b}}>
+                <div style={{width:52,height:52,borderRadius:10,overflow:"hidden",background:T.p+"18",flexShrink:0}}>
+                  {it.images?.[0]?<img src={it.images[0]} alt={it.name} onError={e=>e.target.style.display="none"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,color:T.p+"66"}}>✦</div>}
+                </div>
+                <div style={{flex:1,minWidth:100}}>
+                  <p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:16,color:T.text}}>{it.name}</p>
+                  <p style={{fontSize:12,color:T.tm}}>RM {it.price?.toFixed(2)} · {it.category||"—"} · Stock: {it.stock} · ⭐{it.rating||0} · {it.purchaseCount||0} sold</p>
+                </div>
+                <div style={{display:"flex",gap:6,flexShrink:0}}>
+                  <button onClick={()=>setEditItem(it)} className="btn" style={{background:T.pl,borderRadius:50,padding:"6px 13px",fontSize:12,color:T.p,fontWeight:600}}>Edit</button>
+                  <button onClick={()=>{if(window.confirm("Delete "+it.name+"?"))saveItems(items.filter(i=>i.id!==it.id));toast("Deleted");}} className="btn" style={{background:"#FFE0E0",borderRadius:50,padding:"6px 13px",fontSize:12,color:"#E54040"}}>Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── HOMEPAGE TAB ── */}
+      {tab==="homepage"&&(
+        <div style={{maxWidth:620,display:"flex",flexDirection:"column",gap:18}}>
+          <SBox title="🦸 Hero Section">
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <div><Lbl c="Hero Title"/><input value={ec.heroTitle||""} onChange={e=>se("heroTitle",e.target.value)} style={iSt()}/></div>
+              <div><Lbl c="Hero Subtitle"/><input value={ec.heroSubtitle||""} onChange={e=>se("heroSubtitle",e.target.value)} style={iSt()}/></div>
+              <div><Lbl c="Hero Image URL"/><input value={ec.heroImage||""} onChange={e=>se("heroImage",e.target.value)} placeholder="https://... leave empty for solid color" style={iSt()}/></div>
+              <div><Lbl c="Hero Background Color (if no image)"/><div style={{display:"flex",gap:8,alignItems:"center"}}><input type="color" value={ec.heroBgColor||"#1A1220"} onChange={e=>se("heroBgColor",e.target.value)} style={{width:44,height:36,borderRadius:9,border:"1.5px solid "+T.b,padding:2,cursor:"pointer"}}/><input value={ec.heroBgColor||""} onChange={e=>se("heroBgColor",e.target.value)} placeholder="#1A1220" style={{...iSt(),flex:1}}/></div></div>
+              <div><Lbl c={"Dark Overlay Opacity: "+ec.heroOverlay+"%"}/><input type="range" min={0} max={90} value={ec.heroOverlay||55} onChange={e=>se("heroOverlay",Number(e.target.value))} style={{width:"100%",accentColor:T.p}}/></div>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><Lbl c="Show CTA Button"/><Toggle on={ec.ctaVisible!==false} onChange={()=>se("ctaVisible",ec.ctaVisible===false)}/></div>
+              {ec.ctaVisible!==false&&<div><Lbl c="CTA Button Text"/><input value={ec.ctaText||""} onChange={e=>se("ctaText",e.target.value)} style={iSt()}/></div>}
+            </div>
+          </SBox>
+          <SBox title="📝 Description" desc="Short text below the hero">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><Lbl c="Visible"/><Toggle on={ec.descVisible!==false} onChange={()=>se("descVisible",ec.descVisible===false)}/></div>
+            <textarea value={ec.descText||""} onChange={e=>se("descText",e.target.value)} rows={3} style={{...iSt(),resize:"vertical",borderRadius:10}}/>
+          </SBox>
+          <SBox title="⭐ Featured Items" desc="Pick items to show on the homepage">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><Lbl c="Visible"/><Toggle on={ec.featuredVisible!==false} onChange={()=>se("featuredVisible",ec.featuredVisible===false)}/></div>
+            <div><Lbl c="Section Title"/><input value={ec.featuredTitle||""} onChange={e=>se("featuredTitle",e.target.value)} style={{...iSt(),marginBottom:10}}/></div>
+            <Lbl c="Select Featured Items"/>
+            <div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:220,overflowY:"auto",marginTop:6}}>
+              {items.map(it=>{const sel=(ec.featuredItems||[]).includes(it.id);return(
+                <label key={it.id} style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer",padding:"7px 10px",borderRadius:9,background:sel?T.pl:T.bg,border:"1px solid "+(sel?T.p:T.b)}}>
+                  <input type="checkbox" checked={sel} onChange={()=>{const fi=ec.featuredItems||[];se("featuredItems",sel?fi.filter(id=>id!==it.id):[...fi,it.id]);}} style={{accentColor:T.p}}/>
+                  <span style={{fontSize:13,color:T.text}}>{it.name}</span>
+                </label>
+              );})}
+              {items.length===0&&<p style={{fontSize:12,color:T.tl}}>Add items first in the Products tab.</p>}
+            </div>
+          </SBox>
+          <SBox title="💬 Customer Reviews">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><Lbl c="Section Visible"/><Toggle on={ec.reviewsVisible!==false} onChange={()=>se("reviewsVisible",ec.reviewsVisible===false)}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:12}}>
+              {(ec.reviews||[]).map((rv,i)=>(
+                <div key={rv.id} style={{background:T.bg,borderRadius:11,padding:"12px 14px",border:"1px solid "+T.b}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                    <div style={{flex:1}}>
+                      <div style={{display:"flex",gap:6,marginBottom:5,flexWrap:"wrap"}}>
+                        <input value={rv.name} onChange={e=>{const r=[...(ec.reviews||[])];r[i]={...r[i],name:e.target.value};se("reviews",r);}} placeholder="Customer name" style={{...iSt(),flex:1,minWidth:100}}/>
+                        <select value={rv.stars||5} onChange={e=>{const r=[...(ec.reviews||[])];r[i]={...r[i],stars:Number(e.target.value)};se("reviews",r);}} style={{...iSt(),width:"auto",cursor:"pointer"}}>
+                          {[5,4,3,2,1].map(s=><option key={s} value={s}>{"★".repeat(s)}</option>)}
+                        </select>
+                      </div>
+                      <textarea value={rv.text} onChange={e=>{const r=[...(ec.reviews||[])];r[i]={...r[i],text:e.target.value};se("reviews",r);}} rows={2} placeholder="Review text…" style={{...iSt(),resize:"vertical",borderRadius:9,marginBottom:5}}/>
+                      <input value={rv.photo||""} onChange={e=>{const r=[...(ec.reviews||[])];r[i]={...r[i],photo:e.target.value};se("reviews",r);}} placeholder="Customer photo URL (optional, small profile pic)" style={{...iSt(),fontSize:12,marginBottom:5}}/>
+                      <input value={rv.date||""} onChange={e=>{const r=[...(ec.reviews||[])];r[i]={...r[i],date:e.target.value};se("reviews",r);}} placeholder="Date (e.g. January 2025)" style={{...iSt(),fontSize:12}}/>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:5,flexShrink:0,alignItems:"center"}}>
+                      <Toggle on={rv.visible!==false} onChange={()=>{const r=[...(ec.reviews||[])];r[i]={...r[i],visible:rv.visible===false};se("reviews",r);}}/>
+                      <span style={{fontSize:9,color:T.tl,textAlign:"center"}}>{rv.visible!==false?"Visible":"Hidden"}</span>
+                      <button onClick={()=>se("reviews",(ec.reviews||[]).filter((_,j)=>j!==i))} className="btn" style={{background:"#FFE0E0",borderRadius:7,padding:"4px 8px",fontSize:11,color:"#E54040"}}>✕</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button onClick={()=>se("reviews",[...(ec.reviews||[]),{id:uid(),name:"",text:"",stars:5,date:"",visible:true}])} className="btn" style={{width:"100%",background:T.bg,border:"1px dashed "+T.b,borderRadius:9,padding:"8px",fontSize:12,color:T.tm}}>+ Add Review</button>
+          </SBox>
+          <SBox title="📸 Photo Carousel" desc="Small photos scrolling left to right">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><Lbl c="Visible"/><Toggle on={ec.carouselVisible!==false} onChange={()=>se("carouselVisible",ec.carouselVisible===false)}/></div>
+            <div><Lbl c="Section Title"/><input value={ec.carouselTitle||""} onChange={e=>se("carouselTitle",e.target.value)} style={{...iSt(),marginBottom:10}}/></div>
+            {(ec.carouselPhotos||[]).map((ph,i)=>(
+              <div key={i} style={{display:"flex",gap:7,marginBottom:7,alignItems:"center"}}>
+                <input value={ph.url||""} onChange={e=>{const p=[...(ec.carouselPhotos||[])];p[i]={...p[i],url:e.target.value};se("carouselPhotos",p);}} placeholder="Image URL" style={{...iSt(),flex:1}}/>
+                <button onClick={()=>se("carouselPhotos",(ec.carouselPhotos||[]).filter((_,j)=>j!==i))} className="btn" style={{background:"#FFE0E0",borderRadius:8,padding:"0 11px",color:"#E54040",fontSize:16,height:40,flexShrink:0}}>×</button>
+              </div>
+            ))}
+            <button onClick={()=>se("carouselPhotos",[...(ec.carouselPhotos||[]),{url:""}])} className="btn" style={{width:"100%",background:T.bg,border:"1px dashed "+T.b,borderRadius:9,padding:"7px",fontSize:12,color:T.tm}}>+ Add Photo</button>
+          </SBox>
+          <SBox title="❓ FAQ">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><Lbl c="Visible"/><Toggle on={ec.faqVisible!==false} onChange={()=>se("faqVisible",ec.faqVisible===false)}/></div>
+            <div><Lbl c="Section Title"/><input value={ec.faqTitle||""} onChange={e=>se("faqTitle",e.target.value)} style={{...iSt(),marginBottom:10}}/></div>
+            {(ec.faqs||[]).map((fq,i)=>(
+              <div key={fq.id} style={{background:T.bg,borderRadius:11,padding:"12px 14px",marginBottom:8,border:"1px solid "+T.b}}>
+                <div style={{display:"flex",gap:8}}>
+                  <div style={{flex:1,display:"flex",flexDirection:"column",gap:7}}>
+                    <input value={fq.q} onChange={e=>{const f=[...(ec.faqs||[])];f[i]={...f[i],q:e.target.value};se("faqs",f);}} placeholder="Question" style={iSt()}/>
+                    <textarea value={fq.a} onChange={e=>{const f=[...(ec.faqs||[])];f[i]={...f[i],a:e.target.value};se("faqs",f);}} rows={2} placeholder="Answer" style={{...iSt(),resize:"vertical",borderRadius:9}}/>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:5,alignItems:"center",flexShrink:0}}>
+                    <Toggle on={fq.visible!==false} onChange={()=>{const f=[...(ec.faqs||[])];f[i]={...f[i],visible:fq.visible===false};se("faqs",f);}}/>
+                    <button onClick={()=>se("faqs",(ec.faqs||[]).filter((_,j)=>j!==i))} className="btn" style={{background:"#FFE0E0",borderRadius:7,padding:"4px 8px",fontSize:11,color:"#E54040"}}>✕</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button onClick={()=>se("faqs",[...(ec.faqs||[]),{id:uid(),q:"",a:"",visible:true}])} className="btn" style={{width:"100%",background:T.bg,border:"1px dashed "+T.b,borderRadius:9,padding:"7px",fontSize:12,color:T.tm}}>+ Add FAQ</button>
+          </SBox>
+          <SBox title="🪟 Popup Settings">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><Lbl c="Show popup to new visitors"/><Toggle on={ec.popupVisible!==false} onChange={()=>se("popupVisible",ec.popupVisible===false)}/></div>
+            <div style={{display:"flex",flexDirection:"column",gap:9}}>
+              <div><Lbl c="Popup Title"/><input value={ec.popupTitle||""} onChange={e=>se("popupTitle",e.target.value)} style={iSt()}/></div>
+              <div><Lbl c="Popup Text"/><input value={ec.popupText||""} onChange={e=>se("popupText",e.target.value)} style={iSt()}/></div>
+            </div>
+          </SBox>
+          <SBox title="📧 Newsletter Settings">
+            <div style={{display:"flex",flexDirection:"column",gap:9}}>
+              <div><Lbl c="Newsletter Title"/><input value={ec.newsletterTitle||""} onChange={e=>se("newsletterTitle",e.target.value)} style={iSt()}/></div>
+              <div><Lbl c="Newsletter Subtitle"/><input value={ec.newsletterText||""} onChange={e=>se("newsletterText",e.target.value)} style={iSt()}/></div>
+            </div>
+          </SBox>
+          <button onClick={async()=>{await saveCfg(ec);toast("Homepage saved ✓");}} className="btn" style={{alignSelf:"flex-start",background:T.p,color:"#fff",borderRadius:50,padding:"12px 28px",fontSize:14,fontWeight:600}}>Save Homepage</button>
+        </div>
+      )}
+
+      {/* ── DESIGN TAB ── */}
+      {tab==="design"&&(
+        <div style={{maxWidth:620,display:"flex",flexDirection:"column",gap:18}}>
+          <SBox title="🎨 Colors">
+            <div style={{display:"flex",flexDirection:"column",gap:13}}>
+              {[["Primary / Accent Color","colorPrimary"],["Page Background","colorBg"],["Card Background","colorCard"],["Footer Color","colorFooter"],["Text Color","colorText"]].map(([l,k])=>(
+                <div key={k} style={{display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{flex:1}}><Lbl c={l}/></div>
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <input type="color" value={ec[k]||"#000000"} onChange={e=>se(k,e.target.value)} style={{width:44,height:36,borderRadius:9,border:"1.5px solid "+T.b,padding:2,cursor:"pointer"}}/>
+                    <input value={ec[k]||""} onChange={e=>se(k,e.target.value)} placeholder="#000000" style={{...iSt(),width:96,padding:"7px 10px",fontSize:12}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SBox>
+          <SBox title="🔤 Fonts">
+            <div style={{display:"flex",flexDirection:"column",gap:11}}>
+              <div>
+                <Lbl c="Heading Font (titles, shop name)"/>
+                <select value={ec.fontHeading||"Cormorant Garamond"} onChange={e=>se("fontHeading",e.target.value)} style={{...iSt(),cursor:"pointer"}}>
+                  {Object.keys(FONTS).filter(f=>f.includes("Garamond")||f.includes("Playfair")||f.includes("EB Gar")||f.includes("Inter")).concat(["DM Sans","Jost"]).map(f=><option key={f} value={f} style={{fontFamily:FONTS[f]}}>{f}</option>)}
+                </select>
+                <p style={{fontFamily:FONTS[ec.fontHeading||"Cormorant Garamond"],fontSize:20,marginTop:8,color:T.text}}>Preview: Mystery Jewelry Jar ✦</p>
+              </div>
+              <div>
+                <Lbl c="Body Font (buttons, text)"/>
+                <select value={ec.fontBody||"Jost"} onChange={e=>se("fontBody",e.target.value)} style={{...iSt(),cursor:"pointer"}}>
+                  {["Jost","DM Sans","Inter","Cormorant Garamond","Playfair Display"].map(f=><option key={f} value={f}>{f}</option>)}
+                </select>
+                <p style={{fontFamily:FONTS[ec.fontBody||"Jost"],fontSize:14,marginTop:8,color:T.tm}}>Preview: Add to cart · Browse collection · RM 49.00</p>
+              </div>
+            </div>
+          </SBox>
+          <SBox title="⏳ Loading Screen">
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <div><Lbl c="Loading Text"/><input value={ec.loadingText||""} onChange={e=>se("loadingText",e.target.value)} placeholder="unwrapping your magic…" style={iSt()}/></div>
+              <div><Lbl c="Loading Image URL (optional)"/><input value={ec.loadingImage||""} onChange={e=>se("loadingImage",e.target.value)} placeholder="https://..." style={iSt()}/></div>
+              <div><Lbl c="Loading Background Color"/><div style={{display:"flex",gap:8,alignItems:"center"}}><input type="color" value={ec.loadingBg||"#1A1220"} onChange={e=>se("loadingBg",e.target.value)} style={{width:44,height:36,borderRadius:9,border:"1.5px solid "+T.b,padding:2,cursor:"pointer"}}/><input value={ec.loadingBg||""} onChange={e=>se("loadingBg",e.target.value)} placeholder="#1A1220" style={{...iSt(),flex:1}}/></div></div>
+            </div>
+          </SBox>
+          <SBox title="🌐 Currency">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><Lbl c="Auto-detect by country"/><Toggle on={ec.currencyAuto!==false} onChange={()=>se("currencyAuto",ec.currencyAuto===false)}/></div>
+            <p style={{fontSize:12,color:T.tl}}>When enabled, the price currency changes based on the visitor's country (MY=RM, SG=SGD, US=USD, AU=AUD, GB=£). Prices stay in MYR — only the symbol changes.</p>
+          </SBox>
+          <button onClick={async()=>{await saveCfg(ec);toast("Design saved ✓");}} className="btn" style={{alignSelf:"flex-start",background:T.p,color:"#fff",borderRadius:50,padding:"12px 28px",fontSize:14,fontWeight:600}}>Save Design</button>
+        </div>
+      )}
+
+      {/* ── CUSTOMERS TAB ── */}
+      {tab==="customers"&&(
+        <div>
+          <p style={{fontSize:13,color:T.tm,marginBottom:16}}>{subs.length} email subscriber{subs.length!==1?"s":""}</p>
+          {subs.length===0?(<div style={{textAlign:"center",padding:48,color:T.tl}}><div style={{fontSize:40,color:T.p,marginBottom:10}}>✦</div><p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:20,color:T.text}}>No subscribers yet</p></div>):(
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {subs.map(s=>(
+                <div key={s.id} style={{background:T.card,borderRadius:13,padding:"12px 16px",display:"flex",gap:12,alignItems:"center",boxShadow:T.sh,flexWrap:"wrap",border:"1px solid "+T.b}}>
+                  <div style={{width:36,height:36,borderRadius:"50%",background:T.p+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:T.p,flexShrink:0}}>{s.email[0].toUpperCase()}</div>
+                  <div style={{flex:1}}>
+                    <p style={{fontSize:14,color:T.text}}>{s.email}</p>
+                    <p style={{fontSize:11,color:T.tl}}>{new Date(s.date).toLocaleDateString()}</p>
+                  </div>
+                  <span style={{fontSize:11,background:s.discUsed?"#f0f0f0":T.pl,color:s.discUsed?T.tl:T.p,borderRadius:50,padding:"3px 10px",fontWeight:600}}>{s.disc?(s.discUsed?"Discount Used":"🎁 Discount Active"):"Subscribed"}</span>
+                  <button onClick={()=>{if(window.confirm("Remove "+s.email+"?"))saveSubs(subs.filter(x=>x.id!==s.id));}} className="btn" style={{background:"#FFE0E0",borderRadius:50,padding:"4px 11px",fontSize:11,color:"#E54040"}}>Remove</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── ORDERS TAB ── */}
+      {tab==="orders"&&(
+        <div>
+          <p style={{fontSize:13,color:T.tm,marginBottom:16}}>{orders.length} order{orders.length!==1?"s":""} placed via WhatsApp</p>
+          {orders.length===0?(<div style={{textAlign:"center",padding:48,color:T.tl}}><div style={{fontSize:40,color:T.p,marginBottom:10}}>✦</div><p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:20,color:T.text}}>No orders yet</p></div>):(
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {[...orders].reverse().map(o=>(
+                <div key={o.id} style={{background:T.card,borderRadius:13,padding:"13px 16px",boxShadow:T.sh,border:"1px solid "+T.b}}>
+                  <div style={{display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+                    <div>
+                      <p style={{fontSize:14,fontWeight:600,color:T.text}}>{o.name} <span style={{fontWeight:400,color:T.tl,fontSize:12}}>· {o.phone}</span></p>
+                      <p style={{fontSize:12,color:T.tm}}>{o.state} · {o.items?.join(", ")}</p>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <p style={{fontSize:15,fontWeight:700,color:T.text}}>RM {o.total?.toFixed(2)}</p>
+                      <p style={{fontSize:11,color:T.tl}}>{new Date(o.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SETTINGS TAB ── */}
+      {tab==="settings"&&(
+        <div style={{maxWidth:560,display:"flex",flexDirection:"column",gap:18}}>
+          <SBox title="🏪 Shop Details">
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {[["Shop Name","shopName"],["Tagline","tagline"],["Footer About Text","footerAboutText"],["About Page Text","aboutText"]].map(([l,k])=>(
+                <div key={k}><Lbl c={l}/>{k==="aboutText"?<textarea value={ec[k]||""} onChange={e=>se(k,e.target.value)} rows={4} style={{...iSt(),resize:"vertical",borderRadius:10}}/>:<input value={ec[k]||""} onChange={e=>se(k,e.target.value)} style={iSt()}/>}</div>
+              ))}
+            </div>
+          </SBox>
+          <SBox title="📞 Contact & Social">
+            <div style={{display:"flex",flexDirection:"column",gap:9}}>
+              {[["WhatsApp Number (orders)","whatsapp"],["Contact Email","contactEmail"],["Instagram Handle","contactIG"],["Instagram URL","contactIGUrl"],["TikTok Handle","contactTT"],["TikTok URL","contactTTUrl"]].map(([l,k])=>(
+                <div key={k}><Lbl c={l}/><input value={ec[k]||""} onChange={e=>se(k,e.target.value)} style={iSt()}/></div>
+              ))}
+            </div>
+          </SBox>
+          <SBox title="🚚 Shipping (Malaysia)">
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div><Lbl c="West Malaysia (RM)"/><input type="number" step=".01" value={ec.shippingWM??10} onChange={e=>se("shippingWM",Number(e.target.value))} style={iSt()}/></div>
+              <div><Lbl c="East Malaysia (RM)"/><input type="number" step=".01" value={ec.shippingEM??15} onChange={e=>se("shippingEM",Number(e.target.value))} style={iSt()}/></div>
+            </div>
+          </SBox>
+          <SBox title="🏷️ Discounts & Promo">
+            <div style={{display:"flex",flexDirection:"column",gap:9}}>
+              {[["Subscriber Signup Discount %","discPct","number"],["Promo Code","promoCode","text"],["Promo Code Discount %","promoPct","number"]].map(([l,k,t])=>(
+                <div key={k}><Lbl c={l}/><input type={t} value={ec[k]!==undefined?ec[k]:""} onChange={e=>se(k,t==="number"?Number(e.target.value):e.target.value)} style={iSt()}/></div>
+              ))}
+            </div>
+          </SBox>
+          <SBox title="🔐 Security">
+            <div><Lbl c="Admin Password"/><input type="password" value={ec.adminPass||""} onChange={e=>se("adminPass",e.target.value)} style={iSt()}/></div>
+          </SBox>
+          <SBox title="☁️ Cloud Sync (JSONBin)">
+            <div style={{display:"flex",flexDirection:"column",gap:9}}>
+              <div><Lbl c="Master Key"/><input type="password" value={ec.jbKey||""} onChange={e=>se("jbKey",e.target.value)} style={iSt()}/></div>
+              <div><Lbl c="Bin ID"/><input value={ec.jbId||""} onChange={e=>se("jbId",e.target.value)} style={iSt()}/></div>
+              <button onClick={async()=>{setTestStatus("Testing…");const r=await JB.pull(ec.jbKey,ec.jbId);setTestStatus(r!==null?"✅ Connected!":"❌ Failed. Check credentials.");}} className="btn" style={{alignSelf:"flex-start",background:T.bg,border:"1.5px solid "+T.b,borderRadius:50,padding:"8px 18px",fontSize:13,color:T.text}}>Test Connection</button>
+              {testStatus&&<p style={{fontSize:13,color:testStatus.includes("✅")?T.p:"#E54040"}}>{testStatus}</p>}
+            </div>
+          </SBox>
+          <button onClick={async()=>{await saveCfg(ec);toast("Settings saved ✓");}} className="btn" style={{alignSelf:"flex-start",background:T.p,color:"#fff",borderRadius:50,padding:"12px 28px",fontSize:14,fontWeight:600}}>Save All Settings</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ──── ITEM FORM (ADMIN) ──── */
+function ItemFormAdmin({item,cfg,onSave,onClose}){
+  const[f,setF]=useState({
+    name:item?.name||"",price:item?.price||"",originalPrice:item?.originalPrice||"",
+    images:item?.images?.length?item.images:[""],description:item?.description||"",
+    category:item?.category||"",stock:item!=null?item.stock:10,
+    tags:item?.tags?.join(", ")||"",
+    rating:item?.rating||0,ratingCount:item?.ratingCount||0,purchaseCount:item?.purchaseCount||0,
+    sizeChart:item?.sizeChart||"",
+    hasSizes:item?.hasSizes||false,
+    sizes:item?.sizes?.length?item.sizes:[{label:"S",price:0},{label:"M",price:0},{label:"L",price:0},{label:"XL",price:0}],
+    hasColors:item?.hasColors||false,
+    colors:item?.colors?.length?item.colors:[{label:"Gold",hex:"#D4AF37",price:0}],
+    hasStyles:item?.hasStyles||false,
+    styles:item?.styles?.length?item.styles:[{label:"Classic",price:0}],
+    hasNote:item?.hasNote||false,
+    notePlaceholder:item?.notePlaceholder||"Any preferences? Leave blank for a surprise!",
+    supplierUrl:item?.supplierUrl||"",costPrice:item?.costPrice||"",supplierNotes:item?.supplierNotes||"",
+    featured:item?.featured||false,
+  });
+  const[err,setErr]=useState("");
+  const se=(k,v)=>setF(p=>({...p,[k]:v}));
+
+  const save=()=>{
+    if(!f.name||!f.price){setErr("Name and price are required.");return;}
+    const imgs=f.images.filter(i=>i.trim());
+    const tags=f.tags?f.tags.split(",").map(t=>t.trim()).filter(Boolean):[];
+    const sizes=f.hasSizes?f.sizes.filter(s=>s.label.trim()).map(s=>({...s,price:Number(s.price)||0})):[];
+    const colors=f.hasColors?f.colors.filter(c=>c.label.trim()).map(c=>({...c,price:Number(c.price)||0})):[];
+    const styles=f.hasStyles?f.styles.filter(s=>s.label.trim()).map(s=>({...s,price:Number(s.price)||0})):[];
+    onSave({
+      ...(item?{id:item.id}:{}),
+      name:f.name,price:parseFloat(f.price),
+      originalPrice:f.originalPrice?parseFloat(f.originalPrice):null,
+      images:imgs.length?imgs:[""],description:f.description,
+      category:f.category,stock:parseInt(f.stock)||0,tags,
+      rating:parseFloat(f.rating)||0,ratingCount:parseInt(f.ratingCount)||0,
+      purchaseCount:parseInt(f.purchaseCount)||0,
+      sizeChart:f.sizeChart,
+      hasSizes:f.hasSizes,sizes,
+      hasColors:f.hasColors,colors,
+      hasStyles:f.hasStyles,styles,
+      hasNote:f.hasNote,notePlaceholder:f.notePlaceholder,
+      supplierUrl:f.supplierUrl,costPrice:f.costPrice?parseFloat(f.costPrice):null,
+      supplierNotes:f.supplierNotes,featured:f.featured,
+    });
+  };
+
+  const addImg=()=>se("images",[...f.images,""]);
+  const updImg=(i,v)=>{const a=[...f.images];a[i]=v;se("images",a);};
+  const remImg=i=>se("images",f.images.filter((_,j)=>j!==i));
+
+  const updSize=(i,k,v)=>{const a=[...f.sizes];a[i]={...a[i],[k]:v};se("sizes",a);};
+  const addSize=()=>se("sizes",[...f.sizes,{label:"",price:0}]);
+  const remSize=i=>se("sizes",f.sizes.filter((_,j)=>j!==i));
+
+  const updColor=(i,k,v)=>{const a=[...f.colors];a[i]={...a[i],[k]:v};se("colors",a);};
+  const addColor=()=>se("colors",[...f.colors,{label:"",hex:"#000000",price:0}]);
+  const remColor=i=>se("colors",f.colors.filter((_,j)=>j!==i));
+
+  const updStyle=(i,k,v)=>{const a=[...f.styles];a[i]={...a[i],[k]:v};se("styles",a);};
+  const addStyle=()=>se("styles",[...f.styles,{label:"",price:0}]);
+  const remStyle=i=>se("styles",f.styles.filter((_,j)=>j!==i));
+
+  return(
+    <>
+      <div className="fi" onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:300}}/>
+      <div style={{position:"fixed",inset:0,zIndex:301,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"16px",display:"flex",alignItems:"flex-start",justifyContent:"center"}}>
+        <div className="mi" style={{background:T.card,borderRadius:22,width:"100%",maxWidth:560,padding:"24px 20px",boxShadow:"0 20px 56px rgba(0,0,0,.18)",margin:"0 auto 40px",border:"1px solid "+T.b}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+            <h2 style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:22,color:T.text,fontWeight:400}}>{item?"Edit Item":"Add New Item"}</h2>
+            <button onClick={onClose} className="btn" style={{background:T.bg,borderRadius:"50%",width:30,height:30,fontSize:18,color:T.tm,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+          </div>
+
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            {/* Basic info */}
+            <div><Lbl c="Item Name *"/><input value={f.name} onChange={e=>se("name",e.target.value)} placeholder="e.g. Gold Charm Mystery Jar" style={iSt()}/></div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div><Lbl c="Price (RM) *"/><input type="number" step=".01" value={f.price} onChange={e=>se("price",e.target.value)} placeholder="0.00" style={iSt()}/></div>
+              <div><Lbl c="Original Price (sale)"/><input type="number" step=".01" value={f.originalPrice} onChange={e=>se("originalPrice",e.target.value)} placeholder="optional" style={iSt()}/></div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div><Lbl c="Category"/><input value={f.category} onChange={e=>se("category",e.target.value)} placeholder="e.g. Bracelets" style={iSt()}/></div>
+              <div><Lbl c="Stock"/><input type="number" value={f.stock} onChange={e=>se("stock",e.target.value)} style={iSt()}/></div>
+            </div>
+
+            {/* Images */}
+            <div>
+              <Lbl c="Image URLs"/>
+              {f.images.map((img,i)=>(
+                <div key={i} style={{display:"flex",gap:6,marginBottom:6}}>
+                  <input value={img} onChange={e=>updImg(i,e.target.value)} placeholder={"Image URL "+(i+1)} style={{...iSt(),flex:1}}/>
+                  {f.images.length>1&&<button onClick={()=>remImg(i)} className="btn" style={{background:"#FFE0E0",borderRadius:8,padding:"0 10px",color:"#E54040",fontSize:15,flexShrink:0}}>×</button>}
+                </div>
+              ))}
+              <button onClick={addImg} className="btn" style={{width:"100%",background:T.bg,border:"1px dashed "+T.b,borderRadius:8,padding:"7px",fontSize:12,color:T.tm}}>+ Add image</button>
+            </div>
+
+            {/* Description */}
+            <div><Lbl c="Description"/><textarea value={f.description} onChange={e=>se("description",e.target.value)} rows={3} placeholder="Describe this item…" style={{...iSt(),resize:"vertical",borderRadius:10}}/></div>
+
+            {/* Tags */}
+            <div><Lbl c="Tags (comma separated)"/><input value={f.tags} onChange={e=>se("tags",e.target.value)} placeholder="new, bestseller, limited" style={iSt()}/></div>
+
+            {/* Rating & purchase count */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+              <div><Lbl c="Rating (0-5)"/><input type="number" step=".1" min={0} max={5} value={f.rating} onChange={e=>se("rating",e.target.value)} style={iSt()}/></div>
+              <div><Lbl c="# Reviews"/><input type="number" value={f.ratingCount} onChange={e=>se("ratingCount",e.target.value)} style={iSt()}/></div>
+              <div><Lbl c="# Purchased"/><input type="number" value={f.purchaseCount} onChange={e=>se("purchaseCount",e.target.value)} style={iSt()}/></div>
+            </div>
+
+            {/* SIZE CHART */}
+            <div><Lbl c="Size Chart Image URL (optional)"/><input value={f.sizeChart} onChange={e=>se("sizeChart",e.target.value)} placeholder="https://..." style={iSt()}/></div>
+
+            {/* SIZES */}
+            <div style={{background:T.bg,borderRadius:12,padding:"12px 14px",border:"1px solid "+T.b}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:f.hasSizes?10:0}}>
+                <Lbl c="Size Options"/>
+                <Toggle on={f.hasSizes} onChange={()=>se("hasSizes",!f.hasSizes)}/>
+              </div>
+              {f.hasSizes&&(
+                <div>
+                  {f.sizes.map((sz,i)=>(
+                    <div key={i} style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
+                      <input value={sz.label} onChange={e=>updSize(i,"label",e.target.value)} placeholder="Label e.g. S" style={{...iSt(),flex:1}}/>
+                      <input type="number" step=".01" value={sz.price} onChange={e=>updSize(i,"price",e.target.value)} placeholder="RM price" style={{...iSt(),width:80}}/>
+                      {f.sizes.length>1&&<button onClick={()=>remSize(i)} className="btn" style={{background:"#FFE0E0",borderRadius:8,padding:"0 9px",color:"#E54040",fontSize:15,height:38,flexShrink:0}}>×</button>}
+                    </div>
+                  ))}
+                  <p style={{fontSize:11,color:T.tl,marginBottom:6}}>💡 Enter the full price for each size (e.g. RM 59.00). This is the main price — "From" is based on the lowest size price.</p><button onClick={addSize} className="btn" style={{width:"100%",background:T.card,border:"1px dashed "+T.b,borderRadius:8,padding:"6px",fontSize:12,color:T.tm}}>+ Add Size</button>
+                </div>
+              )}
+            </div>
+
+            {/* COLORS */}
+            <div style={{background:T.bg,borderRadius:12,padding:"12px 14px",border:"1px solid "+T.b}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:f.hasColors?10:0}}>
+                <Lbl c="Color Options"/>
+                <Toggle on={f.hasColors} onChange={()=>se("hasColors",!f.hasColors)}/>
+              </div>
+              {f.hasColors&&(
+                <div>
+                  {f.colors.map((co,i)=>(
+                    <div key={i} style={{display:"flex",gap:6,marginBottom:6,alignItems:"center"}}>
+                      <input type="color" value={co.hex||"#000000"} onChange={e=>updColor(i,"hex",e.target.value)} style={{width:38,height:38,borderRadius:8,border:"1.5px solid "+T.b,padding:2,cursor:"pointer",flexShrink:0}}/>
+                      <input value={co.label} onChange={e=>updColor(i,"label",e.target.value)} placeholder="Color name" style={{...iSt(),flex:1}}/>
+                      <input type="number" step=".01" value={co.price} onChange={e=>updColor(i,"price",e.target.value)} placeholder="+RM addon" style={{...iSt(),width:90}}/>
+                      {f.colors.length>1&&<button onClick={()=>remColor(i)} className="btn" style={{background:"#FFE0E0",borderRadius:8,padding:"0 9px",color:"#E54040",fontSize:15,height:38,flexShrink:0}}>×</button>}
+                    </div>
+                  ))}
+                  <p style={{fontSize:11,color:T.tl,marginBottom:6}}>💡 Enter the extra amount to add on top of the size price (e.g. 10 = +RM10.00). Leave 0 if no extra charge.</p><button onClick={addColor} className="btn" style={{width:"100%",background:T.card,border:"1px dashed "+T.b,borderRadius:8,padding:"6px",fontSize:12,color:T.tm}}>+ Add Color</button>
+                </div>
+              )}
+            </div>
+
+            {/* STYLES */}
+            <div style={{background:T.bg,borderRadius:12,padding:"12px 14px",border:"1px solid "+T.b}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:f.hasStyles?10:0}}>
+                <Lbl c="Style Options (custom)"/>
+                <Toggle on={f.hasStyles} onChange={()=>se("hasStyles",!f.hasStyles)}/>
+              </div>
+              {f.hasStyles&&(
+                <div>
+                  {f.styles.map((st,i)=>(
+                    <div key={i} style={{display:"flex",gap:6,marginBottom:6}}>
+                      <input value={st.label} onChange={e=>updStyle(i,"label",e.target.value)} placeholder="Style name" style={{...iSt(),flex:1}}/>
+                      <input type="number" step=".01" value={st.price} onChange={e=>updStyle(i,"price",e.target.value)} placeholder="+RM addon" style={{...iSt(),width:90}}/>
+                      {f.styles.length>1&&<button onClick={()=>remStyle(i)} className="btn" style={{background:"#FFE0E0",borderRadius:8,padding:"0 9px",color:"#E54040",fontSize:15,height:38,flexShrink:0}}>×</button>}
+                    </div>
+                  ))}
+                  <p style={{fontSize:11,color:T.tl,marginBottom:6}}>💡 Enter the extra amount to add on top of the size price (e.g. 10 = +RM10.00). Leave 0 if no extra charge.</p><button onClick={addStyle} className="btn" style={{width:"100%",background:T.card,border:"1px dashed "+T.b,borderRadius:8,padding:"6px",fontSize:12,color:T.tm}}>+ Add Style</button>
+                </div>
+              )}
+            </div>
+
+            {/* NOTE */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:T.bg,borderRadius:12,padding:"12px 14px",border:"1px solid "+T.b}}>
+              <div style={{flex:1,marginRight:12}}>
+                <Lbl c="Additional Notes Field"/>
+                {f.hasNote&&<input value={f.notePlaceholder} onChange={e=>se("notePlaceholder",e.target.value)} placeholder="Placeholder text…" style={{...iSt(),marginTop:8}}/>}
+              </div>
+              <Toggle on={f.hasNote} onChange={()=>se("hasNote",!f.hasNote)}/>
+            </div>
+
+            {/* SUPPLIER */}
+            <div style={{background:"#FFFBEA",borderRadius:12,padding:"12px 14px",border:"1px dashed #F5D86A"}}>
+              <p style={{fontSize:12,fontWeight:700,color:"#C8A000",marginBottom:8}}>📦 Supplier / Dropshipping (private)</p>
+              <div style={{display:"flex",flexDirection:"column",gap:7}}>
+                <div><Lbl c="Supplier URL"/><input value={f.supplierUrl} onChange={e=>se("supplierUrl",e.target.value)} placeholder="https://..." style={iSt()}/></div>
+                <div><Lbl c="Cost Price (RM)"/><input type="number" step=".01" value={f.costPrice} onChange={e=>se("costPrice",e.target.value)} placeholder="0.00" style={iSt()}/></div>
+                {f.costPrice&&f.price&&<p style={{fontSize:12,color:"#3DA84A",fontWeight:600}}>Profit margin: RM{(parseFloat(f.price)-(parseFloat(f.costPrice)||0)).toFixed(2)} per item</p>}
+                <div><Lbl c="Supplier Notes"/><input value={f.supplierNotes} onChange={e=>se("supplierNotes",e.target.value)} placeholder="Internal notes…" style={iSt()}/></div>
+              </div>
+            </div>
+
+            {err&&<p style={{fontSize:13,color:"#E54040"}}>{err}</p>}
+            <div style={{display:"flex",gap:9,marginTop:4}}>
+              <button onClick={onClose} className="btn" style={{flex:1,padding:11,background:T.bg,border:"1.5px solid "+T.b,borderRadius:10,fontSize:13,color:T.text}}>Cancel</button>
+              <button onClick={save} className="btn" style={{flex:2,padding:11,background:T.p,color:"#fff",borderRadius:10,fontSize:13,fontWeight:600}}>{item?"Save Changes":"Add Item"}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+const root=ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App/>);
+</script></body></html>
