@@ -39,12 +39,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--pd,#D4AF37)!important
 .product-card:hover{transform:translateY(-5px)}
 
 /* Carousel */
-.carousel-track{display:flex;gap:12px;animation:scroll 30s linear infinite;width:max-content}
+.carousel-track{display:flex;gap:16px;animation:scroll 22s linear infinite;width:max-content;align-items:stretch}
 .carousel-track:hover{animation-play-state:paused}
 .carousel-wrap{overflow:hidden;position:relative}
-.carousel-wrap::before,.carousel-wrap::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
-.carousel-wrap::before{left:0;background:linear-gradient(to right,var(--bg,#FAF6EE),transparent)}
-.carousel-wrap::after{right:0;background:linear-gradient(to left,var(--bg,#FAF6EE),transparent)}
 
 /* Stars */
 .star{color:#D4AF37;font-size:14px}
@@ -97,8 +94,8 @@ const DCFG={
   shopName:"Mystery Jewelry Jar",
   tagline:"Handcrafted treasures, wrapped in mystery ✦",
   whatsapp:"60123456789",adminPass:"admin123",
-  jbKey:"$2a$10$vZAiQI4.pDSIOYeoMUKpfu1fbs8wpqWzxch70qgTg8Wl8m.PtO72K",
-  jbId:"6a185be3ddf5aa59f7705bca",
+  jbKey:"",
+  jbId:"",
   colorPrimary:"#D4AF37",colorBg:"#FAF6EE",colorCard:"#FFFFFF",
   colorFooter:"#1A1220",colorText:"#1A1220",colorAccent:"#1A1220",
   fontHeading:"Cormorant Garamond",fontBody:"Jost",
@@ -274,8 +271,6 @@ function App(){
               🛒
               {cnt>0&&<span style={{position:"absolute",top:-4,right:-4,background:T.p,color:"#fff",borderRadius:"50%",width:16,height:16,fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{cnt}</span>}
             </button>
-            <button onClick={()=>setLoginOpen(true)} className="btn hide-sm" style={{background:"none",border:"1.5px solid "+T.b,borderRadius:50,padding:"5px 13px",fontSize:12,color:T.text}}>Login</button>
-            <button onClick={()=>setSignupOpen(true)} className="btn hide-sm" style={{background:T.p,borderRadius:50,padding:"5px 13px",fontSize:12,color:"#fff",fontWeight:600}}>Sign Up</button>
           </div>
         </div>
         {searchOpen&&(
@@ -303,10 +298,6 @@ function App(){
             </div>
             <div style={{padding:"16px 20px",borderTop:"1px solid "+T.b,display:"flex",flexDirection:"column",gap:8}}>
               <button onClick={()=>nav("catalog")} className="btn" style={{width:"100%",padding:"12px",background:T.p,color:"#fff",borderRadius:11,fontSize:14,fontWeight:600}}>Shop Now ✦</button>
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>{setMenuOpen(false);setSignupOpen(true);}} className="btn" style={{flex:1,padding:"10px",background:T.p+"18",border:"1.5px solid "+T.p,borderRadius:11,color:T.p,fontSize:13,fontWeight:600}}>Sign Up</button>
-                <button onClick={()=>{setMenuOpen(false);setLoginOpen(true);}} className="btn" style={{flex:1,padding:"10px",background:"none",border:"1.5px solid "+T.b,borderRadius:11,color:T.text,fontSize:13}}>Login</button>
-              </div>
             </div>
           </div>
         </>
@@ -349,8 +340,7 @@ function App(){
               {cfg.contactEmail&&<span style={{display:"block",fontSize:13}}>✉️ {cfg.contactEmail}</span>}
             </div>
           </div>
-          {/* Newsletter */}
-          <NewsletterBar cfg={cfg} subs={subs} saveSubs={saveSubs} toast={toast}/>
+          {/* Newsletter bar removed */}
           <div style={{borderTop:"1px solid rgba(255,255,255,.07)",paddingTop:16,maxWidth:1160,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
             <p style={{fontSize:12}}>© {new Date().getFullYear()} {cfg.shopName}. All rights reserved.</p>
             <button onClick={()=>nav("admin")} className="btn" style={{background:"none",color:"rgba(255,255,255,.06)",fontSize:11,padding:0}} onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,.2)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,.06)"}>manage</button>
@@ -358,55 +348,11 @@ function App(){
         </footer>
       )}
 
-      {/* ══ POPUP ══ */}
-      {showPopup&&cfg.popupVisible&&(
-        <>
-          <div className="fi" onClick={()=>{setShowPopup(false);setPopupDone(true);}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:500}}/>
-          <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:501,pointerEvents:"none"}}>
-            <div className="mi" style={{background:T.card,borderRadius:24,padding:"36px 28px",width:"min(400px,90vw)",maxWidth:400,textAlign:"center",boxShadow:"0 24px 60px rgba(0,0,0,.22)",position:"relative",pointerEvents:"auto"}}>
-              <button onClick={()=>{setShowPopup(false);setPopupDone(true);}} className="btn" style={{position:"absolute",top:14,right:14,background:"rgba(0,0,0,.07)",borderRadius:"50%",width:28,height:28,fontSize:16,color:T.tm,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
-              <div className="fl" style={{fontSize:36,marginBottom:12,color:T.p}}>✦</div>
-              <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:26,color:T.text,marginBottom:8,fontWeight:400}}>{cfg.popupTitle}</h2>
-              <p style={{fontSize:14,color:T.tm,marginBottom:20,lineHeight:1.7}}>{cfg.popupText}</p>
-              <SignupForm cfg={cfg} subs={subs} saveSubs={saveSubs} toast={toast} onDone={()=>{setShowPopup(false);setPopupDone(true);}} onLogin={()=>{setShowPopup(false);setPopupDone(true);setLoginOpen(true);}}/>
-            </div>
-          </div>
-        </>
-      )}
+      {/* ══ POPUP ══ (disabled) */}
 
-      {/* ══ SIGNUP MODAL ══ */}
-      {signupOpen&&(
-        <>
-          <div className="fi" onClick={()=>setSignupOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:500}}/>
-          <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:501,pointerEvents:"none"}}>
-            <div className="mi" style={{background:T.card,borderRadius:22,padding:"36px 28px",width:"min(420px,92vw)",boxShadow:"0 22px 56px rgba(0,0,0,.18)",textAlign:"center",position:"relative",pointerEvents:"auto"}}>
-              <button onClick={()=>setSignupOpen(false)} className="btn" style={{position:"absolute",top:14,right:14,background:"rgba(0,0,0,.07)",borderRadius:"50%",width:28,height:28,fontSize:16,color:T.tm,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
-              <div style={{fontSize:28,color:T.p,marginBottom:10}}>✦</div>
-              <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:26,color:T.text,fontWeight:400,marginBottom:6}}>Join {cfg.shopName}</h2>
-              <p style={{fontSize:13,color:T.p,marginBottom:22}}>🎁 Get {cfg.discPct}% off your first order!</p>
-              <SignupForm cfg={cfg} subs={subs} saveSubs={saveSubs} toast={toast} onDone={()=>setSignupOpen(false)} onLogin={()=>{setSignupOpen(false);setLoginOpen(true);}}/>
-            </div>
-          </div>
-        </>
-      )}
+      {/* ══ SIGNUP MODAL ══ (disabled) */}
 
-      {/* ══ LOGIN MODAL ══ */}
-      {loginOpen&&(
-        <>
-          <div className="fi" onClick={()=>setLoginOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.45)",zIndex:500}}/>
-          <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",zIndex:501,pointerEvents:"none"}}>
-          <div className="mi" style={{background:T.card,borderRadius:22,padding:"32px 26px",width:"min(400px,90vw)",boxShadow:"0 22px 56px rgba(0,0,0,.18)",position:"relative",pointerEvents:"auto"}}>
-            <button onClick={()=>setLoginOpen(false)} className="btn" style={{position:"absolute",top:14,right:14,background:"none",fontSize:20,color:T.tm}}>×</button>
-            <div style={{textAlign:"center",marginBottom:20}}>
-              <div style={{fontSize:28,color:T.p,marginBottom:8}}>✦</div>
-              <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:24,color:T.text,fontWeight:400}}>Welcome Back</h2>
-              <p style={{fontSize:13,color:T.tl,marginTop:6}}>Enter your email to check your discount status</p>
-            </div>
-            <LoginForm subs={subs} toast={toast} cfg={cfg} onClose={()=>setLoginOpen(false)}/>
-          </div>
-          </div>
-        </>
-      )}
+      {/* ══ LOGIN MODAL ══ (disabled) */}
     </div>
   );
 }
@@ -505,27 +451,36 @@ function HomePage({cfg,items,onNav,currency}){
   const overlay=cfg.heroOverlay||55;
   return(
     <div>
-      {/* 1. HERO */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"center",textAlign:"center",position:"relative",overflow:"hidden",minHeight:cfg.heroImage?"unset":"70vh",background:cfg.heroImage?"transparent":cfg.heroBgColor||"#1A1220"}}>
-        {cfg.heroImage&&<img src={cfg.heroImage} alt="hero" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"contain",objectPosition:"center",zIndex:0,display:"block"}}/>}
+      {/* 1. HERO — full-bleed bold layout */}
+      <div style={{position:"relative",overflow:"hidden",minHeight:"92vh",display:"flex",alignItems:"center",background:cfg.heroBgColor||"#1A1220"}}>
+        {/* Background image — cover full area */}
+        {cfg.heroImage&&(
+          <img src={cfg.heroImage} alt="hero" style={{position:"absolute",inset:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center",zIndex:0}}/>
+        )}
+        {/* Overlay */}
         <div style={{position:"absolute",inset:0,background:"rgba(0,0,0,"+overlay/100+")",zIndex:1}}/>
-        {[{t:"8%",l:"5%",s:24,d:0},{t:"20%",r:"6%",s:16,d:1.2},{b:"12%",r:"8%",s:20,d:.6},{b:"22%",l:"9%",s:14,d:1.8}].map((p,i)=>(
-          <span key={i} className="fl" style={{position:"absolute",fontSize:p.s,opacity:.25,color:cfg.colorPrimary||"#D4AF37",top:p.t,bottom:p.b,left:p.l,right:p.r,animationDelay:p.d+"s",zIndex:2}}>✦</span>
+        {/* Floating sparkles */}
+        {[{t:"10%",l:"4%",s:22,d:0},{t:"18%",r:"5%",s:14,d:1.1},{b:"14%",r:"7%",s:18,d:.5},{b:"20%",l:"6%",s:12,d:1.7},{t:"50%",l:"50%",s:10,d:.9}].map((p,i)=>(
+          <span key={i} className="fl" style={{position:"absolute",fontSize:p.s,opacity:.2,color:cfg.colorPrimary||"#D4AF37",top:p.t,bottom:p.b,left:p.l,right:p.r,animationDelay:p.d+"s",zIndex:2}}>✦</span>
         ))}
-        <div style={{position:"relative",zIndex:3,padding:"60px 24px",maxWidth:760}}>
-          <div className="fu" style={{animationDelay:"0ms"}}>
-            <p style={{fontSize:11,letterSpacing:".4em",textTransform:"uppercase",color:T.p,marginBottom:16,fontWeight:500}}>✦ handcrafted jewelry ✦</p>
+        {/* Text block — left aligned, Hippeas-style */}
+        <div style={{position:"relative",zIndex:3,padding:"80px clamp(24px,6vw,100px)",maxWidth:900,width:"100%"}}>
+          <div className="fu" style={{animationDelay:"0ms",marginBottom:16}}>
+            <span style={{fontSize:10,letterSpacing:".5em",textTransform:"uppercase",color:T.p,fontWeight:700,background:"rgba(255,255,255,.08)",padding:"5px 14px",borderRadius:50,border:"1px solid "+(cfg.colorPrimary||"#D4AF37")+"55"}}>✦ handcrafted jewelry ✦</span>
           </div>
-          <h1 className="fu" style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(46px,7vw,96px)",fontWeight:400,color:"#FAF6EE",lineHeight:.95,marginBottom:18,letterSpacing:"-.01em",animationDelay:"80ms"}}>
-            {cfg.heroTitle||"Discover Your Mystery Jar"}
+          <h1 className="fu" style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(54px,9vw,130px)",fontWeight:700,color:"#FAF6EE",lineHeight:.88,marginBottom:28,letterSpacing:"-.03em",animationDelay:"60ms",textTransform:"uppercase"}}>
+            {(cfg.heroTitle||"Discover Your Mystery Jar").split(" ").reduce((acc,word,i,arr)=>{
+              if(i===Math.floor(arr.length/2))return [...acc,<br key={i}/>,word+" "];
+              return [...acc,word+(i<arr.length-1?" ":"")];
+            },[])}
           </h1>
-          <div className="fu" style={{width:60,height:2,background:"linear-gradient(90deg,transparent,"+T.p+",transparent)",margin:"0 auto 20px",animationDelay:"140ms"}}/>
-          <p className="fu" style={{color:"rgba(250,246,238,.65)",fontSize:16,marginBottom:36,lineHeight:1.7,animationDelay:"180ms"}}>
+          <div className="fu" style={{width:56,height:3,background:T.p,marginBottom:24,animationDelay:"120ms",borderRadius:2}}/>
+          <p className="fu" style={{color:"rgba(250,246,238,.7)",fontSize:"clamp(14px,1.8vw,18px)",marginBottom:44,lineHeight:1.75,maxWidth:520,animationDelay:"160ms"}}>
             {cfg.heroSubtitle||"Every jar is a unique handcrafted surprise ✦"}
           </p>
           {cfg.ctaVisible!==false&&(
-            <button className="fu btn" onClick={()=>onNav("catalog")} style={{padding:"14px 36px",background:T.p,color:"#fff",borderRadius:50,fontSize:15,fontWeight:600,letterSpacing:".04em",boxShadow:"0 4px 20px "+T.p+"44",animationDelay:"240ms"}}>
-              {cfg.ctaText||"Browse Collection"} →
+            <button className="fu btn" onClick={()=>onNav("catalog")} style={{padding:"16px 44px",background:T.p,color:"#fff",borderRadius:4,fontSize:15,fontWeight:800,letterSpacing:".08em",textTransform:"uppercase",boxShadow:"0 6px 28px "+T.p+"55",animationDelay:"220ms",transition:"transform .15s,box-shadow .15s"}}>
+              {cfg.ctaText||"Shop Now"} →
             </button>
           )}
         </div>
@@ -589,18 +544,19 @@ function HomePage({cfg,items,onNav,currency}){
         </div>
       )}
 
-      {/* 5. PHOTO CAROUSEL */}
+      {/* 5. PHOTO CAROUSEL — tall marquee, Mystery Jarss style */}
       {cfg.carouselVisible!==false&&cfg.carouselPhotos&&cfg.carouselPhotos.length>0&&(
-        <div style={{padding:"56px 0"}}>
-          <div style={{textAlign:"center",marginBottom:24}}>
-            <p style={{fontSize:11,letterSpacing:".3em",textTransform:"uppercase",color:T.p,marginBottom:8}}>✦ behind the scenes ✦</p>
-            <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(24px,3.5vw,40px)",fontWeight:400,color:T.text}}>{cfg.carouselTitle||"Behind the Scenes ✦"}</h2>
+        <div style={{padding:"72px 0",overflow:"hidden",background:T.bg}}>
+          <div style={{textAlign:"center",marginBottom:32,padding:"0 24px"}}>
+            <p style={{fontSize:10,letterSpacing:".45em",textTransform:"uppercase",color:T.p,marginBottom:10,fontWeight:700}}>✦ behind the scenes ✦</p>
+            <h2 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(28px,4.5vw,56px)",fontWeight:700,color:T.text,letterSpacing:"-.02em"}}>{cfg.carouselTitle||"Behind the Scenes ✦"}</h2>
           </div>
-          <div className="carousel-wrap">
-            <div className="carousel-track">
+          {/* Marquee row */}
+          <div style={{position:"relative",overflow:"hidden"}}>
+            <div className="carousel-track" style={{gap:16,alignItems:"stretch"}}>
               {[...cfg.carouselPhotos,...cfg.carouselPhotos].map((ph,i)=>(
-                <div key={i} style={{width:200,height:200,borderRadius:16,overflow:"hidden",flexShrink:0,background:T.p+"22"}}>
-                  <img src={ph.url} alt="" onError={e=>e.target.style.display="none"} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                <div key={i} style={{width:"clamp(260px,28vw,420px)",height:"clamp(320px,38vw,520px)",flexShrink:0,borderRadius:0,overflow:"hidden",background:T.p+"22",position:"relative"}}>
+                  <img src={ph.url} alt="" onError={e=>e.target.style.display="none"} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center",display:"block"}}/>
                 </div>
               ))}
             </div>
@@ -739,18 +695,25 @@ function ItemPage({item,items,cfg,onBack,onAdd,onItem,currency}){
   const[selColor,setSelColor]=useState("");
   const[selSize,setSelSize]=useState("");
   const[selStyle,setSelStyle]=useState("");
+  const[selCustomQs,setSelCustomQs]=useState({});
   const[note,setNote]=useState("");
   const[err,setErr]=useState("");
   const[chartOpen,setChartOpen]=useState(false);
   const hf=cfg.fontHeading||"Cormorant Garamond";
   const cur=currency||"RM";
 
-  // Size = absolute price (main). Color & Style = addons on top of size price.
+  // Size = absolute price (main). Color, Style, CustomQs = addons on top.
   const varPrice=(()=>{
     let base=item.price||0;
     if(selSize&&item.sizes){const s=item.sizes.find(s=>s.label===selSize);if(s&&s.price>0)base=s.price;}
     if(selColor&&item.colors){const c=item.colors.find(c=>c.label===selColor);if(c&&c.price>0)base+=c.price;}
     if(selStyle&&item.styles){const s=item.styles.find(s=>s.label===selStyle);if(s&&s.price>0)base+=s.price;}
+    if(item.hasCustomQs&&item.customQs){
+      item.customQs.forEach(cq=>{
+        const sel=selCustomQs[cq.id];
+        if(sel){const ch=(cq.choices||[]).find(c=>c.label===sel);if(ch&&ch.price>0)base+=ch.price;}
+      });
+    }
     return base;
   })();
 
@@ -758,8 +721,13 @@ function ItemPage({item,items,cfg,onBack,onAdd,onItem,currency}){
     if(item.colors&&item.colors.length>0&&!selColor){setErr("Please select a color.");return;}
     if(item.sizes&&item.sizes.length>0&&!selSize){setErr("Please select a size.");return;}
     if(item.styles&&item.styles.length>0&&!selStyle){setErr("Please select a style.");return;}
+    if(item.hasCustomQs&&item.customQs){
+      for(const cq of item.customQs){
+        if(!selCustomQs[cq.id]){setErr("Please select an option for: "+cq.label);return;}
+      }
+    }
     setErr("");
-    onAdd(item,{color:selColor,size:selSize,style:selStyle,note,varPrice},qty);
+    onAdd(item,{color:selColor,size:selSize,style:selStyle,customQs:selCustomQs,note,varPrice},qty);
   };
 
   const recs=items.filter(i=>i.id!==item.id&&(!item.category||i.category===item.category)).slice(0,4);
@@ -871,6 +839,21 @@ function ItemPage({item,items,cfg,onBack,onAdd,onItem,currency}){
             </div>
           )}
 
+          {/* CUSTOM QUESTIONS */}
+          {item.hasCustomQs&&item.customQs&&item.customQs.map(cq=>(
+            <div key={cq.id}>
+              <Lbl c={cq.label+(selCustomQs[cq.id]?" — "+selCustomQs[cq.id]:"")}/>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:6}}>
+                {(cq.choices||[]).map(ch=>(
+                  <button key={ch.label} onClick={()=>setSelCustomQs(prev=>({...prev,[cq.id]:ch.label}))} className="btn"
+                    style={{padding:"7px 16px",borderRadius:50,border:"1.5px solid "+(selCustomQs[cq.id]===ch.label?T.p:T.b),background:selCustomQs[cq.id]===ch.label?T.p+"15":"none",color:selCustomQs[cq.id]===ch.label?T.p:T.tm,fontSize:13,fontWeight:600,transition:"all .15s"}}>
+                    {ch.label}{ch.price>0&&<span style={{fontSize:11,opacity:.75,marginLeft:4}}>+{cur}{parseFloat(ch.price).toFixed(2)}</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+
           {/* NOTE */}
           {item.hasNote&&(
             <div>
@@ -971,6 +954,7 @@ function CartPage({cart,cfg,onQty,onRem,onBack,saveOrders,orders,currency,subs,s
       if(c.choices?.color)ch.push("Color: "+c.choices.color);
       if(c.choices?.size)ch.push("Size: "+c.choices.size);
       if(c.choices?.style)ch.push("Style: "+c.choices.style);
+      if(c.choices?.customQs){Object.entries(c.choices.customQs).forEach(([qid,val])=>{const ql=c.customQs?.find(q=>q.id===qid)?.label||qid;ch.push(ql+": "+val);});}
       if(c.choices?.note)ch.push("Note: "+c.choices.note);
       if(ch.length)l+="\n  ("+ch.join(", ")+")";
       return l;
@@ -1016,7 +1000,11 @@ function CartPage({cart,cfg,onQty,onRem,onBack,saveOrders,orders,currency,subs,s
                   <div style={{fontSize:12,color:T.tm,marginBottom:6}}>
                     {it.choices?.color&&<span style={{marginRight:8}}>Color: {it.choices.color}</span>}
                     {it.choices?.size&&<span style={{marginRight:8}}>Size: {it.choices.size}</span>}
-                    {it.choices?.style&&<span>Style: {it.choices.style}</span>}
+                    {it.choices?.style&&<span style={{marginRight:8}}>Style: {it.choices.style}</span>}
+                    {it.choices?.customQs&&Object.entries(it.choices.customQs).map(([qid,val])=>{
+                      const qLabel=it.customQs?.find(q=>q.id===qid)?.label||qid;
+                      return <span key={qid} style={{marginRight:8}}>{qLabel}: {val}</span>;
+                    })}
                     {it.choices?.note&&<p style={{fontSize:11,color:T.tl,marginTop:2}}>Note: {it.choices.note}</p>}
                   </div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1177,7 +1165,7 @@ function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,o
     </div>
   );
 
-  const TABS=[["products","📦 Products"],["homepage","🏠 Homepage"],["design","🎨 Design"],["customers","👥 Customers"],["orders","📋 Orders"],["settings","⚙️ Settings"]];
+  const TABS=[["products","📦 Products"],["homepage","🏠 Homepage"],["design","🎨 Design"],["orders","📋 Orders"],["settings","⚙️ Settings"]];
 
   return(
     <div style={{maxWidth:1100,margin:"0 auto",padding:"26px 16px 56px"}}>
@@ -1313,19 +1301,7 @@ function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,o
             ))}
             <button onClick={()=>se("faqs",[...(ec.faqs||[]),{id:uid(),q:"",a:"",visible:true}])} className="btn" style={{width:"100%",background:T.bg,border:"1px dashed "+T.b,borderRadius:9,padding:"7px",fontSize:12,color:T.tm}}>+ Add FAQ</button>
           </SBox>
-          <SBox title="🪟 Popup Settings">
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><Lbl c="Show popup to new visitors"/><Toggle on={ec.popupVisible!==false} onChange={()=>se("popupVisible",ec.popupVisible===false)}/></div>
-            <div style={{display:"flex",flexDirection:"column",gap:9}}>
-              <div><Lbl c="Popup Title"/><input value={ec.popupTitle||""} onChange={e=>se("popupTitle",e.target.value)} style={iSt()}/></div>
-              <div><Lbl c="Popup Text"/><input value={ec.popupText||""} onChange={e=>se("popupText",e.target.value)} style={iSt()}/></div>
-            </div>
-          </SBox>
-          <SBox title="📧 Newsletter Settings">
-            <div style={{display:"flex",flexDirection:"column",gap:9}}>
-              <div><Lbl c="Newsletter Title"/><input value={ec.newsletterTitle||""} onChange={e=>se("newsletterTitle",e.target.value)} style={iSt()}/></div>
-              <div><Lbl c="Newsletter Subtitle"/><input value={ec.newsletterText||""} onChange={e=>se("newsletterText",e.target.value)} style={iSt()}/></div>
-            </div>
-          </SBox>
+
           <button onClick={async()=>{await saveCfg(ec);toast("Homepage saved ✓");}} className="btn" style={{alignSelf:"flex-start",background:T.p,color:"#fff",borderRadius:50,padding:"12px 28px",fontSize:14,fontWeight:600}}>Save Homepage</button>
         </div>
       )}
@@ -1371,35 +1347,10 @@ function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,o
               <div><Lbl c="Loading Background Color"/><div style={{display:"flex",gap:8,alignItems:"center"}}><input type="color" value={ec.loadingBg||"#1A1220"} onChange={e=>se("loadingBg",e.target.value)} style={{width:44,height:36,borderRadius:9,border:"1.5px solid "+T.b,padding:2,cursor:"pointer"}}/><input value={ec.loadingBg||""} onChange={e=>se("loadingBg",e.target.value)} placeholder="#1A1220" style={{...iSt(),flex:1}}/></div></div>
             </div>
           </SBox>
-          <SBox title="🌐 Currency">
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><Lbl c="Auto-detect by country"/><Toggle on={ec.currencyAuto!==false} onChange={()=>se("currencyAuto",ec.currencyAuto===false)}/></div>
-            <p style={{fontSize:12,color:T.tl}}>When enabled, the price currency changes based on the visitor's country (MY=RM, SG=SGD, US=USD, AU=AUD, GB=£). Prices stay in MYR — only the symbol changes.</p>
-          </SBox>
           <button onClick={async()=>{await saveCfg(ec);toast("Design saved ✓");}} className="btn" style={{alignSelf:"flex-start",background:T.p,color:"#fff",borderRadius:50,padding:"12px 28px",fontSize:14,fontWeight:600}}>Save Design</button>
         </div>
       )}
 
-      {/* ── CUSTOMERS TAB ── */}
-      {tab==="customers"&&(
-        <div>
-          <p style={{fontSize:13,color:T.tm,marginBottom:16}}>{subs.length} email subscriber{subs.length!==1?"s":""}</p>
-          {subs.length===0?(<div style={{textAlign:"center",padding:48,color:T.tl}}><div style={{fontSize:40,color:T.p,marginBottom:10}}>✦</div><p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:20,color:T.text}}>No subscribers yet</p></div>):(
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {subs.map(s=>(
-                <div key={s.id} style={{background:T.card,borderRadius:13,padding:"12px 16px",display:"flex",gap:12,alignItems:"center",boxShadow:T.sh,flexWrap:"wrap",border:"1px solid "+T.b}}>
-                  <div style={{width:36,height:36,borderRadius:"50%",background:T.p+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700,color:T.p,flexShrink:0}}>{s.email[0].toUpperCase()}</div>
-                  <div style={{flex:1}}>
-                    <p style={{fontSize:14,color:T.text}}>{s.email}</p>
-                    <p style={{fontSize:11,color:T.tl}}>{new Date(s.date).toLocaleDateString()}</p>
-                  </div>
-                  <span style={{fontSize:11,background:s.discUsed?"#f0f0f0":T.pl,color:s.discUsed?T.tl:T.p,borderRadius:50,padding:"3px 10px",fontWeight:600}}>{s.disc?(s.discUsed?"Discount Used":"🎁 Discount Active"):"Subscribed"}</span>
-                  <button onClick={()=>{if(window.confirm("Remove "+s.email+"?"))saveSubs(subs.filter(x=>x.id!==s.id));}} className="btn" style={{background:"#FFE0E0",borderRadius:50,padding:"4px 11px",fontSize:11,color:"#E54040"}}>Remove</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── ORDERS TAB ── */}
       {tab==="orders"&&(
@@ -1451,7 +1402,7 @@ function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,o
           </SBox>
           <SBox title="🏷️ Discounts & Promo">
             <div style={{display:"flex",flexDirection:"column",gap:9}}>
-              {[["Subscriber Signup Discount %","discPct","number"],["Promo Code","promoCode","text"],["Promo Code Discount %","promoPct","number"]].map(([l,k,t])=>(
+              {[["Promo Code","promoCode","text"],["Promo Code Discount %","promoPct","number"]].map(([l,k,t])=>(
                 <div key={k}><Lbl c={l}/><input type={t} value={ec[k]!==undefined?ec[k]:""} onChange={e=>se(k,t==="number"?Number(e.target.value):e.target.value)} style={iSt()}/></div>
               ))}
             </div>
@@ -1491,6 +1442,8 @@ function ItemFormAdmin({item,cfg,onSave,onClose}){
     styles:item?.styles?.length?item.styles:[{label:"Classic",price:0}],
     hasNote:item?.hasNote||false,
     notePlaceholder:item?.notePlaceholder||"Any preferences? Leave blank for a surprise!",
+    hasCustomQs:item?.hasCustomQs||false,
+    customQs:item?.customQs?.length?item.customQs:[{id:uid(),label:"Type",choices:[{label:"Option A",price:0}]}],
     supplierUrl:item?.supplierUrl||"",costPrice:item?.costPrice||"",supplierNotes:item?.supplierNotes||"",
     featured:item?.featured||false,
   });
@@ -1504,6 +1457,7 @@ function ItemFormAdmin({item,cfg,onSave,onClose}){
     const sizes=f.hasSizes?f.sizes.filter(s=>s.label.trim()).map(s=>({...s,price:Number(s.price)||0})):[];
     const colors=f.hasColors?f.colors.filter(c=>c.label.trim()).map(c=>({...c,price:Number(c.price)||0})):[];
     const styles=f.hasStyles?f.styles.filter(s=>s.label.trim()).map(s=>({...s,price:Number(s.price)||0})):[];
+    const customQs=f.hasCustomQs?f.customQs.filter(q=>q.label.trim()).map(q=>({...q,choices:(q.choices||[]).filter(c=>c.label.trim()).map(c=>({...c,price:Number(c.price)||0}))})):[];
     onSave({
       ...(item?{id:item.id}:{}),
       name:f.name,price:parseFloat(f.price),
@@ -1517,6 +1471,7 @@ function ItemFormAdmin({item,cfg,onSave,onClose}){
       hasColors:f.hasColors,colors,
       hasStyles:f.hasStyles,styles,
       hasNote:f.hasNote,notePlaceholder:f.notePlaceholder,
+      hasCustomQs:f.hasCustomQs,customQs,
       supplierUrl:f.supplierUrl,costPrice:f.costPrice?parseFloat(f.costPrice):null,
       supplierNotes:f.supplierNotes,featured:f.featured,
     });
@@ -1537,6 +1492,14 @@ function ItemFormAdmin({item,cfg,onSave,onClose}){
   const updStyle=(i,k,v)=>{const a=[...f.styles];a[i]={...a[i],[k]:v};se("styles",a);};
   const addStyle=()=>se("styles",[...f.styles,{label:"",price:0}]);
   const remStyle=i=>se("styles",f.styles.filter((_,j)=>j!==i));
+
+  // Custom questions helpers
+  const addCQ=()=>se("customQs",[...f.customQs,{id:uid(),label:"",choices:[{label:"",price:0}]}]);
+  const remCQ=i=>se("customQs",f.customQs.filter((_,j)=>j!==i));
+  const updCQLabel=(i,v)=>{const a=[...f.customQs];a[i]={...a[i],label:v};se("customQs",a);};
+  const addCQChoice=(qi)=>{const a=[...f.customQs];a[qi]={...a[qi],choices:[...(a[qi].choices||[]),{label:"",price:0}]};se("customQs",a);};
+  const remCQChoice=(qi,ci)=>{const a=[...f.customQs];a[qi]={...a[qi],choices:a[qi].choices.filter((_,j)=>j!==ci)};se("customQs",a);};
+  const updCQChoice=(qi,ci,k,v)=>{const a=[...f.customQs];const ch=[...(a[qi].choices||[])];ch[ci]={...ch[ci],[k]:v};a[qi]={...a[qi],choices:ch};se("customQs",a);};
 
   return(
     <>
@@ -1649,6 +1612,36 @@ function ItemFormAdmin({item,cfg,onSave,onClose}){
               )}
             </div>
 
+            {/* CUSTOM QUESTIONS */}
+            <div style={{background:T.bg,borderRadius:12,padding:"12px 14px",border:"1px solid "+T.b}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:f.hasCustomQs?10:0}}>
+                <Lbl c="Custom Questions / Options"/>
+                <Toggle on={f.hasCustomQs} onChange={()=>se("hasCustomQs",!f.hasCustomQs)}/>
+              </div>
+              {f.hasCustomQs&&(
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  <p style={{fontSize:11,color:T.tl}}>💡 Add any extra options for customers to choose (e.g. "Type", "Material", "Engraving"). Each question has a label and a list of choices.</p>
+                  {f.customQs.map((cq,qi)=>(
+                    <div key={cq.id} style={{background:T.card,borderRadius:10,padding:"10px 12px",border:"1px solid "+T.b}}>
+                      <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center"}}>
+                        <input value={cq.label} onChange={e=>updCQLabel(qi,e.target.value)} placeholder="Question label (e.g. Type, Material)" style={{...iSt(),flex:1,fontWeight:600}}/>
+                        {f.customQs.length>1&&<button onClick={()=>remCQ(qi)} className="btn" style={{background:"#FFE0E0",borderRadius:8,padding:"0 9px",color:"#E54040",fontSize:15,height:38,flexShrink:0}}>×</button>}
+                      </div>
+                      {(cq.choices||[]).map((ch,ci)=>(
+                        <div key={ci} style={{display:"flex",gap:6,marginBottom:5,alignItems:"center"}}>
+                          <input value={ch.label} onChange={e=>updCQChoice(qi,ci,"label",e.target.value)} placeholder={"Choice "+(ci+1)} style={{...iSt(),flex:1}}/>
+                          <input type="number" step=".01" value={ch.price} onChange={e=>updCQChoice(qi,ci,"price",e.target.value)} placeholder="+RM addon" style={{...iSt(),width:90}}/>
+                          {(cq.choices||[]).length>1&&<button onClick={()=>remCQChoice(qi,ci)} className="btn" style={{background:"#FFE0E0",borderRadius:8,padding:"0 9px",color:"#E54040",fontSize:15,height:38,flexShrink:0}}>×</button>}
+                        </div>
+                      ))}
+                      <button onClick={()=>addCQChoice(qi)} className="btn" style={{width:"100%",background:T.bg,border:"1px dashed "+T.b,borderRadius:8,padding:"5px",fontSize:11,color:T.tm,marginTop:2}}>+ Add Choice</button>
+                    </div>
+                  ))}
+                  <button onClick={addCQ} className="btn" style={{width:"100%",background:T.card,border:"1px dashed "+T.b,borderRadius:8,padding:"7px",fontSize:12,color:T.tm}}>+ Add Question</button>
+                </div>
+              )}
+            </div>
+
             {/* NOTE */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:T.bg,borderRadius:12,padding:"12px 14px",border:"1px solid "+T.b}}>
               <div style={{flex:1,marginRight:12}}>
@@ -1658,16 +1651,6 @@ function ItemFormAdmin({item,cfg,onSave,onClose}){
               <Toggle on={f.hasNote} onChange={()=>se("hasNote",!f.hasNote)}/>
             </div>
 
-            {/* SUPPLIER */}
-            <div style={{background:"#FFFBEA",borderRadius:12,padding:"12px 14px",border:"1px dashed #F5D86A"}}>
-              <p style={{fontSize:12,fontWeight:700,color:"#C8A000",marginBottom:8}}>📦 Supplier / Dropshipping (private)</p>
-              <div style={{display:"flex",flexDirection:"column",gap:7}}>
-                <div><Lbl c="Supplier URL"/><input value={f.supplierUrl} onChange={e=>se("supplierUrl",e.target.value)} placeholder="https://..." style={iSt()}/></div>
-                <div><Lbl c="Cost Price (RM)"/><input type="number" step=".01" value={f.costPrice} onChange={e=>se("costPrice",e.target.value)} placeholder="0.00" style={iSt()}/></div>
-                {f.costPrice&&f.price&&<p style={{fontSize:12,color:"#3DA84A",fontWeight:600}}>Profit margin: RM{(parseFloat(f.price)-(parseFloat(f.costPrice)||0)).toFixed(2)} per item</p>}
-                <div><Lbl c="Supplier Notes"/><input value={f.supplierNotes} onChange={e=>se("supplierNotes",e.target.value)} placeholder="Internal notes…" style={iSt()}/></div>
-              </div>
-            </div>
 
             {err&&<p style={{fontSize:13,color:"#E54040"}}>{err}</p>}
             <div style={{display:"flex",gap:9,marginTop:4}}>
