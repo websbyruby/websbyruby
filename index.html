@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mystery Jewelry Jar</title>
+<title>Webs By Ruby DEMO</title>
 <link id="gfont" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -91,8 +91,8 @@ const CURRENCIES={MY:"RM",SG:"SGD ",US:"USD ",AU:"AUD ",GB:"£",EU:"€"};
 
 /* ──── DEFAULT CONFIG ──── */
 const DCFG={
-  shopName:"Mystery Jewelry Jar",
-  tagline:"Handcrafted treasures, wrapped in mystery ✦",
+  shopName:"Your Brand Name",
+  tagline:"Your tagline goes here ✦",
   whatsapp:"60123456789",adminPass:"admin123",
   jbKey:"",
   jbId:"",
@@ -100,23 +100,23 @@ const DCFG={
   colorFooter:"#1A1220",colorText:"#1A1220",colorAccent:"#1A1220",
   fontHeading:"Cormorant Garamond",fontBody:"Jost",
   heroImage:"",heroBgColor:"#1A1220",heroOverlay:55,
-  heroTitle:"Discover Your Mystery Jar",heroSubtitle:"Every jar is a unique handcrafted surprise ✦",
-  ctaText:"Browse Collection",ctaVisible:true,
+  heroTitle:"Your Hero Title Here",heroSubtitle:"A short tagline that describes your brand ✦",
+  ctaText:"Shop Now",ctaVisible:true,
   descVisible:true,
-  descText:"Each Mystery Jewelry Jar is a handcrafted treasure box, carefully curated with love. Unwrap the mystery and discover beautiful jewelry pieces chosen just for you.",
+  descText:"This is your brand description. Tell your customers who you are, what makes your products special, and why they should shop with you. This text is fully customisable.",
   reviewsVisible:true,reviews:[],
   carouselVisible:true,carouselPhotos:[],carouselTitle:"Behind the Scenes ✦",
   featuredVisible:true,featuredItems:[],featuredTitle:"Our Favourites ✦",
   faqVisible:true,faqs:[],faqTitle:"Frequently Asked Questions",
   shippingWM:10,shippingEM:15,
   discPct:10,promoCode:"",promoPct:0,
-  aboutText:"We are Mystery Jewelry Jar — a small handcrafted jewelry brand built on love and creativity. Each jar is carefully packed with unique pieces chosen just for you.",
-  contactEmail:"hello@mysteryjewelryjar.com",contactIG:"@mysteryjewelryjar",contactIGUrl:"https://instagram.com/mysteryjewelryjar",contactTT:"@mysteryjewelryjar",contactTTUrl:"https://tiktok.com/@mysteryjewelryjar",
+  aboutText:"Tell your story here. Share who you are, how you started, and what drives your brand. This About page is fully editable from the Admin panel.",
+  contactEmail:"hello@yourbrand.com",contactIG:"@yourbrand",contactIGUrl:"https://instagram.com/yourbrand",contactTT:"@yourbrand",contactTTUrl:"https://tiktok.com/@yourbrand",
   popupVisible:true,popupTitle:"Welcome! ✦",popupText:"Sign up and get 10% off your first order!",
-  newsletterTitle:"Stay in the loop ✦",newsletterText:"Be the first to know about new jars and special drops.",
+  newsletterTitle:"Stay in the loop ✦",newsletterText:"Be the first to know about new products and special drops.",
   currencyAuto:true,
-  loadingBg:"#1A1220",loadingText:"unwrapping your magic…",loadingImage:"",
-  footerAboutText:"Handcrafted jewelry jars, made with love.",
+  loadingBg:"#1A1220",loadingText:"loading your store…",loadingImage:"",
+  footerAboutText:"Your brand description goes here. Fully customisable.",
   socialTwitter:"",socialFB:"",
 };
 
@@ -241,8 +241,8 @@ function App(){
         {lc.loadingImage&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,.5)"}}/>}
         <div style={{position:"relative",zIndex:1,textAlign:"center"}}>
           <div className="fl" style={{fontSize:48,marginBottom:14,color:lc.colorPrimary||"#D4AF37"}}>✦</div>
-          <p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:38,color:"#FAF6EE",fontWeight:400,letterSpacing:".02em"}}>{lc.shopName||"Mystery Jewelry Jar"}</p>
-          <p style={{color:"rgba(250,246,238,.5)",fontSize:11,marginTop:10,letterSpacing:".22em",textTransform:"uppercase"}}>{lc.loadingText||"unwrapping your magic…"}</p>
+          <p style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:38,color:"#FAF6EE",fontWeight:400,letterSpacing:".02em"}}>{lc.shopName||"Your Brand Name"}</p>
+          <p style={{color:"rgba(250,246,238,.5)",fontSize:11,marginTop:10,letterSpacing:".22em",textTransform:"uppercase"}}>{lc.loadingText||"loading your store…"}</p>
         </div>
       </div>
     );
@@ -253,6 +253,20 @@ function App(){
   return(
     <div style={{minHeight:"100vh",background:T.bg,color:T.text,display:"flex",flexDirection:"column"}}>
       {notif&&<Toast m={notif}/>}
+
+      {/* ══ DEMO BANNER ══ */}
+      {pg!=="admin"&&(
+        <div style={{background:"#1A1220",color:"#FAF6EE",textAlign:"center",padding:"9px 16px",fontSize:12,letterSpacing:".04em",display:"flex",alignItems:"center",justifyContent:"center",gap:10,flexWrap:"wrap",flexShrink:0}}>
+          <span style={{color:"#D4AF37",fontSize:14}}>✦</span>
+          <span style={{opacity:.7}}>This is a</span>
+          <span style={{fontWeight:700,color:"#D4AF37"}}>DEMO TEMPLATE</span>
+          <span style={{opacity:.7}}>by</span>
+          <a href="https://websbyruby.com" target="_blank" rel="noopener noreferrer" style={{color:"#fff",fontWeight:700,letterSpacing:".06em",textDecoration:"none",borderBottom:"1px solid rgba(255,255,255,.3)",paddingBottom:1}}>Webs By Ruby</a>
+          <span style={{opacity:.5,margin:"0 4px"}}>·</span>
+          <span style={{opacity:.7}}>All content &amp; colors are fully customisable</span>
+          <span style={{color:"#D4AF37",fontSize:14}}>✦</span>
+        </div>
+      )}
 
       {/* ══ NAV ══ */}
       <nav style={{position:"sticky",top:0,zIndex:200,background:T.bg+"F6",backdropFilter:"blur(16px)",borderBottom:"1px solid "+T.b,padding:"0 18px",flexShrink:0}}>
@@ -275,7 +289,7 @@ function App(){
         </div>
         {searchOpen&&(
           <div className="fu" style={{padding:"8px 18px 12px",borderTop:"1px solid "+T.b}}>
-            <input autoFocus value={searchQ} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){nav("catalog");setSearchOpen(false);}}} placeholder="Search jewelry jars…" style={{...iSt(),borderRadius:50,padding:"9px 18px"}}/>
+            <input autoFocus value={searchQ} onChange={e=>setSearchQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"){nav("catalog");setSearchOpen(false);}}} placeholder="Search products…" style={{...iSt(),borderRadius:50,padding:"9px 18px"}}/>
           </div>
         )}
       </nav>
@@ -343,9 +357,24 @@ function App(){
           {/* Newsletter bar removed */}
           <div style={{borderTop:"1px solid rgba(255,255,255,.07)",paddingTop:16,maxWidth:1160,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
             <p style={{fontSize:12}}>© {new Date().getFullYear()} {cfg.shopName}. All rights reserved.</p>
+            <p style={{fontSize:12,display:"flex",alignItems:"center",gap:6}}>
+              <span style={{opacity:.4}}>Website by</span>
+              <a href="https://websbyruby.com" target="_blank" rel="noopener noreferrer" style={{color:T.p,fontWeight:700,textDecoration:"none",fontSize:12,letterSpacing:".02em"}} onMouseEnter={e=>e.currentTarget.style.opacity=".75"} onMouseLeave={e=>e.currentTarget.style.opacity="1"}>Webs By Ruby</a>
+            </p>
             <button onClick={()=>nav("admin")} className="btn" style={{background:"none",color:"rgba(255,255,255,.06)",fontSize:11,padding:0}} onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,.2)"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,.06)"}>manage</button>
           </div>
         </footer>
+      )}
+
+      {/* ══ Webs By Ruby floating badge ══ */}
+      {pg!=="admin"&&(
+        <a href="https://websbyruby.com" target="_blank" rel="noopener noreferrer"
+          style={{position:"fixed",bottom:20,right:20,zIndex:999,display:"flex",alignItems:"center",gap:8,background:"#1A1220",color:"#FAF6EE",padding:"9px 16px 9px 12px",borderRadius:50,boxShadow:"0 4px 20px rgba(0,0,0,.28)",textDecoration:"none",fontSize:12,fontWeight:700,letterSpacing:".03em",border:"1px solid rgba(255,255,255,.1)",backdropFilter:"blur(8px)",transition:"transform .15s,box-shadow .15s"}}
+          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 8px 28px rgba(0,0,0,.35)";}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,.28)";}}>
+          <span style={{fontSize:15}}>✦</span>
+          <span>Webs By Ruby</span>
+        </a>
       )}
 
       {/* ══ POPUP ══ (disabled) */}
@@ -649,7 +678,7 @@ function CatalogPage({cfg,items,onItem,searchQ,setSearchQ,currency}){
     <div style={{maxWidth:1160,margin:"0 auto",padding:"28px 16px 60px"}} className="page-wrap">
       <div style={{marginBottom:28}}>
         <p style={{fontSize:11,letterSpacing:".3em",textTransform:"uppercase",color:T.p,marginBottom:6}}>✦ collection</p>
-        <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(30px,5vw,58px)",fontWeight:400,color:T.text}}>All Jewelry Jars</h1>
+        <h1 style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(30px,5vw,58px)",fontWeight:400,color:T.text}}>All Products</h1>
       </div>
       {/* Search + sort */}
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:20,alignItems:"center"}}>
@@ -1172,7 +1201,7 @@ function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,o
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22,flexWrap:"wrap",gap:10}}>
         <div>
           <h1 style={{fontFamily:"var(--font-heading,'Cormorant Garamond'),serif",fontSize:32,color:T.text,fontWeight:400}}>Admin Panel</h1>
-          <p style={{fontSize:13,color:T.tl}}>Manage your jewelry jar shop</p>
+          <p style={{fontSize:13,color:T.tl}}>Manage your online store</p>
         </div>
         <button onClick={onBack} className="btn" style={{background:T.card,border:"1.5px solid "+T.b,borderRadius:50,padding:"8px 18px",fontSize:13,color:T.text}}>← Back to Shop</button>
       </div>
@@ -1329,7 +1358,7 @@ function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,o
                 <select value={ec.fontHeading||"Cormorant Garamond"} onChange={e=>se("fontHeading",e.target.value)} style={{...iSt(),cursor:"pointer"}}>
                   {Object.keys(FONTS).filter(f=>f.includes("Garamond")||f.includes("Playfair")||f.includes("EB Gar")||f.includes("Inter")).concat(["DM Sans","Jost"]).map(f=><option key={f} value={f} style={{fontFamily:FONTS[f]}}>{f}</option>)}
                 </select>
-                <p style={{fontFamily:FONTS[ec.fontHeading||"Cormorant Garamond"],fontSize:20,marginTop:8,color:T.text}}>Preview: Mystery Jewelry Jar ✦</p>
+                <p style={{fontFamily:FONTS[ec.fontHeading||"Cormorant Garamond"],fontSize:20,marginTop:8,color:T.text}}>Preview: Your Brand Name ✦</p>
               </div>
               <div>
                 <Lbl c="Body Font (buttons, text)"/>
