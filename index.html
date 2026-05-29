@@ -366,16 +366,7 @@ function App(){
         </footer>
       )}
 
-      {/* ══ Webs By Ruby floating badge ══ */}
-      {pg!=="admin"&&(
-        <a href="https://websbyruby.com" target="_blank" rel="noopener noreferrer"
-          style={{position:"fixed",bottom:20,right:20,zIndex:999,display:"flex",alignItems:"center",gap:8,background:"#1A1220",color:"#FAF6EE",padding:"9px 16px 9px 12px",borderRadius:50,boxShadow:"0 4px 20px rgba(0,0,0,.28)",textDecoration:"none",fontSize:12,fontWeight:700,letterSpacing:".03em",border:"1px solid rgba(255,255,255,.1)",backdropFilter:"blur(8px)",transition:"transform .15s,box-shadow .15s"}}
-          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 8px 28px rgba(0,0,0,.35)";}}
-          onMouseLeave={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 4px 20px rgba(0,0,0,.28)";}}>
-          <span style={{fontSize:15}}>✦</span>
-          <span>Webs By Ruby</span>
-        </a>
-      )}
+
 
       {/* ══ POPUP ══ (disabled) */}
 
@@ -494,9 +485,7 @@ function HomePage({cfg,items,onNav,currency}){
         ))}
         {/* Text block — left aligned, Hippeas-style */}
         <div style={{position:"relative",zIndex:3,padding:"80px clamp(24px,6vw,100px)",maxWidth:900,width:"100%"}}>
-          <div className="fu" style={{animationDelay:"0ms",marginBottom:16}}>
-            <span style={{fontSize:10,letterSpacing:".5em",textTransform:"uppercase",color:T.p,fontWeight:700,background:"rgba(255,255,255,.08)",padding:"5px 14px",borderRadius:50,border:"1px solid "+(cfg.colorPrimary||"#D4AF37")+"55"}}>✦ handcrafted jewelry ✦</span>
-          </div>
+
           <h1 className="fu" style={{fontFamily:"var(--font-heading,"+FONTS[hf]+")",fontSize:"clamp(54px,9vw,130px)",fontWeight:700,color:"#FAF6EE",lineHeight:.88,marginBottom:28,letterSpacing:"-.03em",animationDelay:"60ms",textTransform:"uppercase"}}>
             {(cfg.heroTitle||"Discover Your Mystery Jar").split(" ").reduce((acc,word,i,arr)=>{
               if(i===Math.floor(arr.length/2))return [...acc,<br key={i}/>,word+" "];
