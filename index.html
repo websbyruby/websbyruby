@@ -93,7 +93,7 @@ const CURRENCIES={MY:"RM",SG:"SGD ",US:"USD ",AU:"AUD ",GB:"£",EU:"€"};
 const DCFG={
   shopName:"Your Brand Name",
   tagline:"Your tagline goes here ✦",
-  whatsapp:"60123456789",adminPass:"admin123",
+  whatsapp:"60123456789",adminPass:"admin123", /* DEFAULT — client changes this in Settings */
   jbKey:"",
   jbId:"",
   colorPrimary:"#D4AF37",colorBg:"#FAF6EE",colorCard:"#FFFFFF",
@@ -153,6 +153,25 @@ const JB={
 };
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
+/* ──── PASSWORD (plain compare — simple & safe for this use case) ──── */
+async function checkPass(input,stored){ return input===stored; }
+async function migratePass(cfg){ return cfg.adminPass; }
+async function hashPass(plain){ return plain; }
+
+/* ──── RATE LIMITER ──── */
+const RL={
+  key:"jj:rl",
+  get(){return LS.g(this.key)||{attempts:0,lockedUntil:0}},
+  isLocked(){const d=this.get();return Date.now()<d.lockedUntil;},
+  lockRemaining(){const d=this.get();return Math.max(0,Math.ceil((d.lockedUntil-Date.now())/1000));},
+  fail(){
+    const d=this.get();d.attempts=(d.attempts||0)+1;
+    if(d.attempts>=5){d.lockedUntil=Date.now()+10*60*1000;d.attempts=0;}
+    LS.s(this.key,d);return d.attempts;
+  },
+  reset(){LS.s(this.key,{attempts:0,lockedUntil:0});}
+};
+
 /* ──── HELPERS ──── */
 const fmtPrice=(n,cur="RM")=>cur+(typeof n==="number"?n.toFixed(2):"0.00");
 function Stars({rating=0,size=14}){
@@ -178,17 +197,45 @@ function App(){
   const[searchQ,setSearchQ]=useState("");const[searchOpen,setSearchOpen]=useState(false);
   const[loginOpen,setLoginOpen]=useState(false);const[signupOpen,setSignupOpen]=useState(false);
   const logoTaps=useRef(0);const logoTimer=useRef(null);
+  const sessionTimer=useRef(null);
+
+  /* ── Session timeout: auto-logout admin after 30min idle ── */
+  useEffect(()=>{
+    if(!adminOk)return;
+    const reset=()=>{
+      clearTimeout(sessionTimer.current);
+      sessionTimer.current=setTimeout(()=>{setAdminOk(false);toast("Session expired — please log in again 🔒");},30*60*1000);
+    };
+    reset();
+    window.addEventListener("mousemove",reset);
+    window.addEventListener("keydown",reset);
+    window.addEventListener("touchstart",reset);
+    return()=>{
+      clearTimeout(sessionTimer.current);
+      window.removeEventListener("mousemove",reset);
+      window.removeEventListener("keydown",reset);
+      window.removeEventListener("touchstart",reset);
+    };
+  },[adminOk]);
 
   useEffect(()=>{(async()=>{
-    const cloud=await JB.pull(DCFG.jbKey,DCFG.jbId);
+    /* ── Get keys: hardcoded first, then fall back to locally saved cfg ── */
+    const savedCfg=LS.g("jj:cfg")||{};
+    const activeKey=DCFG.jbKey||savedCfg.jbKey||"";
+    const activeId=DCFG.jbId||savedCfg.jbId||"";
+
+    const cloud=await JB.pull(activeKey,activeId);
     if(cloud){
-      const merged={...DCFG,...(cloud.cfg||{})};
+      /* Always keep the keys so all devices can reconnect */
+      const merged={...DCFG,...(cloud.cfg||{}),jbKey:activeKey,jbId:activeId};
+      /* Migrate plain-text password to hash on first load */
+      merged.adminPass=await migratePass(merged);
       buildT(merged);setCfgS(merged);LS.s("jj:cfg",merged);
       setItemsS(cloud.items||[]);LS.s("jj:items",cloud.items||[]);
       setSubsS(cloud.subs||[]);LS.s("jj:subs",cloud.subs||[]);
       setOrdersS(cloud.orders||[]);LS.s("jj:orders",cloud.orders||[]);
     } else {
-      const lc=LS.g("jj:cfg")||DCFG;buildT(lc);setCfgS(lc);
+      const lc={...DCFG,...savedCfg};buildT(lc);setCfgS(lc);
       setItemsS(LS.g("jj:items")||[]);
       setSubsS(LS.g("jj:subs")||[]);
       setOrdersS(LS.g("jj:orders")||[]);
@@ -202,15 +249,54 @@ function App(){
     }
   })();},[]);
 
+  /* ── AUTO SYNC every 30s — only works on GitHub Pages, not local file ── */
+  useEffect(()=>{
+    if(loading)return;
+    if(window.location.protocol==="file:")return;
+    const iv=setInterval(async()=>{
+      const sc=LS.g("jj:cfg")||{};
+      const ak=DCFG.jbKey||sc.jbKey||"";
+      const ai=DCFG.jbId||sc.jbId||"";
+      if(!ak||!ai)return;
+      const cloud=await JB.pull(ak,ai);
+      if(!cloud)return;
+      const merged={...DCFG,...(cloud.cfg||{}),jbKey:ak,jbId:ai};
+      merged.adminPass=await migratePass(merged);
+      buildT(merged);setCfgS(merged);LS.s("jj:cfg",merged);
+      setItemsS(cloud.items||[]);LS.s("jj:items",cloud.items||[]);
+      setSubsS(cloud.subs||[]);LS.s("jj:subs",cloud.subs||[]);
+      setOrdersS(cloud.orders||[]);LS.s("jj:orders",cloud.orders||[]);
+    },30000);
+    return()=>clearInterval(iv);
+  },[loading]);
+
   useEffect(()=>{
     if(!loading&&!popupDone&&cfg.popupVisible){
       const t=setTimeout(()=>{setShowPopup(true);},3500);return()=>clearTimeout(t);
     }
   },[loading,cfg.popupVisible,popupDone]);
 
+  /* ── Called by AdminPage when JSONbin keys are entered ── */
+  const onCloudLoad=async(key,id)=>{
+    if(!key||!id)return false;
+    const cloud=await JB.pull(key,id);
+    if(!cloud)return false;
+    const merged={...DCFG,...(cloud.cfg||{}),jbKey:key,jbId:id};
+    merged.adminPass=await migratePass(merged);
+    buildT(merged);setCfgS(merged);LS.s("jj:cfg",merged);
+    setItemsS(cloud.items||[]);LS.s("jj:items",cloud.items||[]);
+    setSubsS(cloud.subs||[]);LS.s("jj:subs",cloud.subs||[]);
+    setOrdersS(cloud.orders||[]);LS.s("jj:orders",cloud.orders||[]);
+    return true;
+  };
+
   const syncCloud=async(ni,ns,no,nc)=>{
-    const c=nc||cfg;if(!c.jbKey||!c.jbId)return;
-    await JB.push(c.jbKey,c.jbId,{items:ni||items,subs:ns||subs,orders:no||orders,cfg:c});
+    const c=nc||cfg;
+    const sc=LS.g("jj:cfg")||{};
+    const ak=DCFG.jbKey||c.jbKey||sc.jbKey||"";
+    const ai=DCFG.jbId||c.jbId||sc.jbId||"";
+    if(!ak||!ai)return;
+    await JB.push(ak,ai,{items:ni||items,subs:ns||subs,orders:no||orders,cfg:{...c,jbKey:ak,jbId:ai}});
   };
   const saveItems=async v=>{setItemsS(v);LS.s("jj:items",v);await syncCloud(v,null,null,null);};
   const saveSubs=async v=>{setSubsS(v);LS.s("jj:subs",v);await syncCloud(null,v,null,null);};
@@ -326,7 +412,15 @@ function App(){
         {pg==="about"&&<AboutPage cfg={cfg} onNav={nav}/>}
         {pg==="contact"&&<ContactPage cfg={cfg} onNav={nav}/>}
         {pg==="privacy"&&<PrivacyPage cfg={cfg} onNav={nav}/>}
-        {pg==="admin"&&<AdminPage ok={adminOk} onAuth={p=>{if(p===cfg.adminPass){setAdminOk(true);return true;}return false;}} cfg={cfg} saveCfg={saveCfg} items={items} saveItems={saveItems} subs={subs} saveSubs={saveSubs} orders={orders} onBack={()=>nav("home")} toast={toast}/>}
+        {pg==="admin"&&<AdminPage ok={adminOk} onAuth={async p=>{
+          if(RL.isLocked()){toast("Too many attempts. Try again in "+RL.lockRemaining()+"s 🔒");return false;}
+          const ok=await checkPass(p,cfg.adminPass);
+          if(ok){RL.reset();setAdminOk(true);return true;}
+          const left=RL.fail();
+          if(RL.isLocked())toast("Too many wrong attempts — locked for 10 minutes 🔒");
+          else toast("Wrong password. "+(5-left)+" attempts left.");
+          return false;
+        }} cfg={cfg} saveCfg={saveCfg} items={items} saveItems={saveItems} subs={subs} saveSubs={saveSubs} orders={orders} onBack={()=>nav("home")} toast={toast} onCloudLoad={onCloudLoad}/>}
       </div>
 
       {/* ══ FOOTER ══ */}
@@ -1159,7 +1253,7 @@ function SBox({title,children,desc}){
   );
 }
 
-function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,onBack,toast}){
+function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,onBack,toast,onCloudLoad}){
   const[pw,setPw]=useState("");const[err,setErr]=useState("");
   const[tab,setTab]=useState("products");
   const[ec,setEc]=useState({...cfg});
@@ -1432,11 +1526,29 @@ function AdminPage({ok,onAuth,cfg,saveCfg,items,saveItems,subs,saveSubs,orders,o
             <div style={{display:"flex",flexDirection:"column",gap:9}}>
               <div><Lbl c="Master Key"/><input type="password" value={ec.jbKey||""} onChange={e=>se("jbKey",e.target.value)} style={iSt()}/></div>
               <div><Lbl c="Bin ID"/><input value={ec.jbId||""} onChange={e=>se("jbId",e.target.value)} style={iSt()}/></div>
-              <button onClick={async()=>{setTestStatus("Testing…");const r=await JB.pull(ec.jbKey,ec.jbId);setTestStatus(r!==null?"✅ Connected!":"❌ Failed. Check credentials.");}} className="btn" style={{alignSelf:"flex-start",background:T.bg,border:"1.5px solid "+T.b,borderRadius:50,padding:"8px 18px",fontSize:13,color:T.text}}>Test Connection</button>
+              <button onClick={async()=>{
+  setTestStatus("Testing…");
+  const ok=await onCloudLoad(ec.jbKey,ec.jbId);
+  if(ok){
+    setTestStatus("✅ All data loaded! Your shop is ready.");
+    toast("✅ Cloud connected! All data loaded.");
+  } else {
+    setTestStatus("❌ Failed. Check your Master Key and Bin ID.");
+  }
+}} className="btn" style={{alignSelf:"flex-start",background:T.bg,border:"1.5px solid "+T.b,borderRadius:50,padding:"8px 18px",fontSize:13,color:T.text}}>Test Connection & Load Data</button>
               {testStatus&&<p style={{fontSize:13,color:testStatus.includes("✅")?T.p:"#E54040"}}>{testStatus}</p>}
             </div>
           </SBox>
-          <button onClick={async()=>{await saveCfg(ec);toast("Settings saved ✓");}} className="btn" style={{alignSelf:"flex-start",background:T.p,color:"#fff",borderRadius:50,padding:"12px 28px",fontSize:14,fontWeight:600}}>Save All Settings</button>
+          <button onClick={async()=>{
+            await saveCfg(ec);
+            if(ec.jbKey&&ec.jbId){
+              toast("Saving & syncing cloud… ⏳");
+              const ok=await onCloudLoad(ec.jbKey,ec.jbId);
+              toast(ok?"✅ Saved & cloud synced!":"Settings saved ✓ (check JSONbin keys)");
+            } else {
+              toast("Settings saved ✓");
+            }
+          }} className="btn" style={{alignSelf:"flex-start",background:T.p,color:"#fff",borderRadius:50,padding:"12px 28px",fontSize:14,fontWeight:600}}>Save All Settings</button>
         </div>
       )}
     </div>
