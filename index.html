@@ -94,8 +94,8 @@ const DCFG={
   shopName:"Your Brand Name",
   tagline:"Your tagline goes here ✦",
   whatsapp:"60123456789",adminPass:"admin123", /* DEFAULT — client changes this in Settings */
-  jbKey:"",
-  jbId:"",
+  jbKey:"$2a$10$vZAiQI4.pDSIOYeoMUKpfu1fbs8wpqWzxch70qgTg8Wl8m.PtO72K",
+  jbId:"6a185be3ddf5aa59f7705bca",
   colorPrimary:"#D4AF37",colorBg:"#FAF6EE",colorCard:"#FFFFFF",
   colorFooter:"#1A1220",colorText:"#1A1220",colorAccent:"#1A1220",
   fontHeading:"Cormorant Garamond",fontBody:"Jost",
@@ -249,24 +249,23 @@ function App(){
     }
   })();},[]);
 
-  /* ── AUTO SYNC every 30s — only works on GitHub Pages, not local file ── */
+  /* ── AUTO SYNC every 60s — only when keys exist and on GitHub Pages ── */
   useEffect(()=>{
     if(loading)return;
     if(window.location.protocol==="file:")return;
+    const sc=LS.g("jj:cfg")||{};
+    const ak=DCFG.jbKey||sc.jbKey||"";
+    const ai=DCFG.jbId||sc.jbId||"";
+    if(!ak||!ai)return; /* No keys = no sync, stops spam */
     const iv=setInterval(async()=>{
-      const sc=LS.g("jj:cfg")||{};
-      const ak=DCFG.jbKey||sc.jbKey||"";
-      const ai=DCFG.jbId||sc.jbId||"";
-      if(!ak||!ai)return;
       const cloud=await JB.pull(ak,ai);
       if(!cloud)return;
       const merged={...DCFG,...(cloud.cfg||{}),jbKey:ak,jbId:ai};
-      merged.adminPass=await migratePass(merged);
       buildT(merged);setCfgS(merged);LS.s("jj:cfg",merged);
       setItemsS(cloud.items||[]);LS.s("jj:items",cloud.items||[]);
       setSubsS(cloud.subs||[]);LS.s("jj:subs",cloud.subs||[]);
       setOrdersS(cloud.orders||[]);LS.s("jj:orders",cloud.orders||[]);
-    },30000);
+    },60000);
     return()=>clearInterval(iv);
   },[loading]);
 
